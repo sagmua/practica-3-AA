@@ -13,7 +13,9 @@ setwd("~/")
 ```
 
 
-Procedemos a la lectura de datos tanto de la base de datos  de clasificación 'SouthAfrica' , como para la de regresión 'LAozone':
+Procedemos a la lectura de datos tanto de la base de datos  de clasificación 'SouthAfrica' , como para la de regresión 'LAozone'. \newline
+
+Lo primero es hacer numéricos aquellos atributos que esten definidos como texto en nuestro conjunto de datos:
 
 ```{r, include=false}
 datos_ozone = read.csv("./datos/LAozone.data")
