@@ -1,0 +1,25 @@
+---
+title: "Trabajo 3"
+author: "Samuel Cardenete Rodríguez y Juan José Sierra González"
+date: "11 de mayo de 2017"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("~/")
+```
+
+
+Procedemos a la lectura de datos tanto de la base de datos  de clasificación 'SouthAfrica' , como para la de regresión 'LAozone':
+
+```{r, include=false}
+datos_ozone = read.csv("./datos/LAozone.data")
+datos_sudafrica = read.csv("./datos/africa.data")
+
+#Cambiamos la columna 'famhist' que contiene caracteres por su equivalente en valores numéricos:
+datos_sudafrica = data.frame(famhist = (ifelse(datos_sudafrica$famhist=="Absent",0,1)),datos_sudafrica[,-which(names(datos_sudafrica) == "famhist")])
+
+```
