@@ -24,4 +24,6 @@ datos_sudafrica = read.csv("./datos/africa.data")
 #Cambiamos la columna 'famhist' que contiene caracteres por su equivalente en valores numéricos:
 datos_sudafrica = data.frame(famhist = (ifelse(datos_sudafrica$famhist=="Absent",0,1)),datos_sudafrica[,-which(names(datos_sudafrica) == "famhist")])
 
+datos_sudafrica = datos_sudafrica[,-which(names(datos_sudafrica) == "row.names")]
+
 ```
