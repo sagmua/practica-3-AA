@@ -37,16 +37,26 @@ Ahora procedemos a ver si reducimos los datos, para ello aplicamos el PCA (lo qu
 
 ```{r}
 sudafricaTrans = preProcess(sudafrica_train, method = c("BoxCox", "center", "scale", "pca"),thresh = 0.9)
-sudafricaTrans$rotation
+summary(sudafricaTrans$rotation)
 
 nearZeroVar(sudafricaTrans$rotation)
 ```
 
 Como comprobamos con la función near cero observamos que no existe ningun atributo cuyas varianzas respecto a las demás sean todas cercanas a cero, por lo que quitar un atributo no sería aconsejable pues no podemos asegurar que no sea importante. Por tanto nos quedamos con 10 atributos.\newline
 
-Para conlcuir el preprocesamiento de los datos, los centramos y los escalamos:
+Para conlcuir el preprocesamiento de los datos, los centramos, aplicamos el BoxCox y los escalamos:
 
 ```{r}
-scale(datos_sudafrica, center = TRUE, scale = TRUE)
-datos_sudafrica[,-ncol(datos_sudafrica)] = scale(datos_sudafrica[,-ncol(datos_sudafrica)], center = TRUE, scale = TRUE)
+sudafricaTrans = preProcess(sudafrica_train[,-ncol(sudafrica_train)], method = c("BoxCox", "center", "scale"),thresh = 0.9)
+sudafrica_train[,-ncol(sudafrica_train)] =predict(sudafricaTrans,sudafrica_train[,-ncol(sudafrica_train)])
+```
+
+Para realizarar un modelo, vemos cuales son las características más representativao (varianza mayor):
+
+```{r}
+regsub_sudafrica =regsubsets(datos_sudafrica[,-ncol(datos_sudafrica)], datos_sudafrica[,ncol(datos_sudafrica)])
+
+summary(regsub_sudafrica)
+
+
 ```
