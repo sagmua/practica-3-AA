@@ -17,7 +17,7 @@ Procedemos a la lectura de datos tanto de la base de datos  de clasificación 'S
 
 Lo primero es hacer numéricos aquellos atributos que esten definidos como texto en nuestro conjunto de datos:
 
-```{r, include=false}
+```{r, include=FALSE}
 datos_ozone = read.csv("./datos/LAozone.data")
 datos_sudafrica = read.csv("./datos/africa.data")
 
@@ -26,4 +26,27 @@ datos_sudafrica = data.frame(famhist = (ifelse(datos_sudafrica$famhist=="Absent"
 
 datos_sudafrica = datos_sudafrica[,-which(names(datos_sudafrica) == "row.names")]
 
+
+#Si queremos obtener un conjunto de indices train para luego ejecutar un modelo lineal sobre el train:
+train = sample (nrow(datos_sudafrica), round(nrow(datos_sudafrica)*0.7))
+sudafrica_train = datos_sudafrica[train,]
+sudafrica_test = datos_sudafrica[-train,]
+```
+
+Ahora procedemos a ver si reducimos los datos, para ello aplicamos el PCA (lo que signifique..) sobre el conjunto train, y con las transformaciones indicadas en los parametros. tras esto observamos el parametro rotation, como influye la varianza de cada parámetro en los parámetros preprocesator mediante PCA obtenidos (PC1, PC2...)
+
+```{r}
+sudafricaTrans = preProcess(sudafrica_train, method = c("BoxCox", "center", "scale", "pca"),thresh = 0.9)
+sudafricaTrans$rotation
+
+nearZeroVar(sudafricaTrans$rotation)
+```
+
+Como comprobamos con la función near cero observamos que no existe ningun atributo cuyas varianzas respecto a las demás sean todas cercanas a cero, por lo que quitar un atributo no sería aconsejable pues no podemos asegurar que no sea importante. Por tanto nos quedamos con 10 atributos.\newline
+
+Para conlcuir el preprocesamiento de los datos, los centramos y los escalamos:
+
+```{r}
+scale(datos_sudafrica, center = TRUE, scale = TRUE)
+datos_sudafrica[,-ncol(datos_sudafrica)] = scale(datos_sudafrica[,-ncol(datos_sudafrica)], center = TRUE, scale = TRUE)
 ```
