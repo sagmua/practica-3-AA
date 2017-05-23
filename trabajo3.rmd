@@ -12,12 +12,13 @@ knitr::opts_chunk$set(echo = TRUE)
 setwd("~/")
 set.seed(5)
 
-#library("AppliedPredictiveModeling",lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+library("AppliedPredictiveModeling",lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
 
-#library("caret", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
-#library("leaps", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+library("caret", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+library("leaps", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
 
 ```
+\newpage
 
 ##Introducción:
 Para la realización de esta práctica obtendremos el ajuste de de modelos lineales basados en dos problemas centrados en dos conjuntos de datos diferentes. En primer lugar trabajaremos con un problema de clasificación, basado en el conjunto de datos "South African Heart Disease", para el reconocimiento de enfermedades cardiovasculares en una población de sudáfrica; y un problema de regresión, basado en el conjunto de datos "Los Angeles Ozone", para predecir los niveles de Ozono en Los angeles.
@@ -61,44 +62,78 @@ datos_sudafrica = data.frame(famhist = (ifelse(datos_sudafrica$famhist=="Absent"
 En primer lugar, realizaremos una división del conjunto de datos. Para el conjunto 'train' de entrenamiento emplearemos el 80% del conjunto total de los datos, de forma que el 20% restante será empleado para test. En caso de realizar validación más adelante explicaremos el cómo.\newline
 Procedemos al particionamiento de los datos, así como a su lectura:
 ```{r, include=FALSE}
-
-
-
 #Si queremos obtener un conjunto de indices train para luego ejecutar un modelo lineal sobre el train:
 train = sample (nrow(datos_sudafrica), round(nrow(datos_sudafrica)*0.8))
+#definimos ambos conjuntos en dos data sets diferentes:
 sudafrica_train = datos_sudafrica[train,]
 sudafrica_test = datos_sudafrica[-train,]
 ```
 
-Ahora procedemos a ver si reducimos los datos, para ello aplicamos el PCA (lo que signifique..) sobre el conjunto train, y con las transformaciones indicadas en los parametros. tras esto observamos el parametro rotation, como influye la varianza de cada parámetro en los parámetros preprocesator mediante PCA obtenidos (PC1, PC2...)
+
+###Preprocesamiento de los datos
+Procedemos ahora al preprocesado de los datos. Podemos emplear varias técnicas para la realización del preprocesamiento de datos. Pero antes de nada comencemos por realizar una vista preeliminar emplearemos el pairs, de tal forma que le indicaremos que compare cada atributo de los  (incluido la clase) con todos los demás, de forma que obtengamos una matriz simétrica de gráficas, con los colores indicando la etiqueta según pueda padecer enfermedad (rojo) o no (verde):
 
 ```{r}
-sudafricaTrans = preProcess(sudafrica_train, method = c("BoxCox", "center", "scale", "pca"),thresh = 0.9)
-summary(sudafricaTrans$rotation)
+#realizamos un attach de los datos para evitar repetir código:
+attach(datos_sudafrica)
+color <- c(rep('green',sum(chd==0)),rep('red',sum(chd==1)))
 
+
+pairs(datos_sudafrica, bg = color, pch = 22)
+```
+\newline
+Al representar la matriz de diagramas de dispersión de los datos podemos tener una vista preeliminar de la dispersión de los diferentes datos.
+Como podemos observar en la matriz de gráficas, la dispersión entre los datos es alta, de forma que apriori los únicos atributos que consideramos que se pueden estar relacionados son 'adiposity' con 'obesity'.
+
+Veamos entonces si es podible realizar una reducción de la dimensionalidad de los datos mediante la aplicación de PCA (Computing the Principal Components) sobre el conjunto de datos para intentar comprobar si existen datos redundantes que puedan ser recombinados en nuevas características que sean resultado de combinaciones lineales de ellos. Prestaremos especial atención a los atributos obesidad y adiposidad. \newline
+
+
+PCA calcula la varianza de cada atributo respecto a los demás, de forma que aquellos atributos que posean menor varianza (cercana a cero) con respecto a los demás serán considerados como redundantes.\newline
+
+Además, para no arriesgar mucho (puesto que PCA va a ciegas) representaremos sólo aquellos componentes que expliquen hasta el 90% de la variabilidad de los datos (es necesario que los datos estén escalados y centrados para aplicar PCA):
+
+```{r}
+sudafricaTrans = preProcess(datos_sudafrica, method = c("BoxCox", "center", "scale", "pca"),thresh = 0.9)
+summary(sudafricaTrans$rotation)
+```
+Como podemos observar en la tabla, se han reducido los atributos a 8 atributos (combinaciones lineales de los 10 anteriores).
+Pero si observamos las varianzas de cada atributo en la tabla respecto al resto de atributos, vemos que no existe ningun atributo cuyas varianzas sean cercanas todas a 0, por lo tanto, aún así para asegurarnos lo comprobamos mediante la siguiente función:
+```{r}
 nearZeroVar(sudafricaTrans$rotation)
 ```
+Como comprobamos con la función nearZero observamos que no existe ningun atributo cuyas varianzas respecto a las demás sean todas cercanas a cero, tal y como decíamos, esto queire decir que todos los atributos son considerados representativos, pues poseen dispersión. Por conclusión, no realizaremos ninguna reducción de atributos.\newline
 
-Como comprobamos con la función near cero observamos que no existe ningun atributo cuyas varianzas respecto a las demás sean todas cercanas a cero, por lo que quitar un atributo no sería aconsejable pues no podemos asegurar que no sea importante. Por tanto nos quedamos con 10 atributos.\newline
+Para conlcuir el preprocesamiento de los datos, realizaremos los siguientes preprocesamientos de los datos:
 
-Para conlcuir el preprocesamiento de los datos, los centramos, aplicamos el BoxCox y los escalamos:
+* \textbf{Escalado}: Se trata de dividir cada uno de los atributos por su desviación típica.
+* \textbf{Centrado}: Calculamos la media de cada atributo y se la restamos para cada valor.
+* \textbf{Box-Cox}: Se trata de intentar reducir el sesgo de cada atributo, para intentar hacer este mas próximo a una distribución Gaussiana.
+
+Para aplicar las transformaciones, emplearemos la función preprocess sobre nuestro conjunto Train, de forma que realizando un predict sobre el preprocesamiento obtenido, obtengamos el conjunto de datos train preprocesado:
+
 
 ```{r}
 sudafricaTrans = preProcess(sudafrica_train[,-ncol(sudafrica_train)], method = c("BoxCox", "center", "scale"),thresh = 0.9)
 sudafrica_train[,-ncol(sudafrica_train)] =predict(sudafricaTrans,sudafrica_train[,-ncol(sudafrica_train)])
 ```
 
-Para realizarar un modelo, vemos cuales son las características más representativao (varianza mayor):
+
+###Estimación de parámetros
+Antes de realizar un modelo, vemos cuales son las características más representativas (varianza mayor), de forma que no empecemos a realizar modelos a ciegas, sino fijándonos en la calidad de sus atributos.\newline
+
+Para ello emplearemos la función regsubsets. Esta función realiza una búsqueda exhaustiva (empleando Branch&Bound) de los mejores conjuntos de atributos en nuestro conjunto de datos (en nuestro caso train) para predecir en una regresión lineal:
 
 ```{r}
 regsub_sudafrica =regsubsets(datos_sudafrica[,-ncol(datos_sudafrica)], datos_sudafrica[,ncol(datos_sudafrica)])
 
 summary(regsub_sudafrica)
-
-
 ```
+Como podemos observar, los mejores atributos son 'age' y 'famhist', seguidos por 'tobbaco' y 'ldl'.\newline
 
 Ahora que sabemos cuáles son las características más recomendables para realizar modelos, vamos a construir una serie de ellos con algunas de estas características y validaremos con el conjunto de test para comprobar los errores que reflejan.
+
+
+###Definición de modelos
 
 ```{r}
 ###########################################################
