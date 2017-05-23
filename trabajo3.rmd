@@ -26,7 +26,7 @@ Para la realización de esta práctica obtendremos el ajuste de de modelos linea
 Comenzaremos primeramente abordando el problema de clasificación:
 
 ##Clasificación: "South African Heart Disease"
-En este caso nos encontramos frente a un problema de clasificación, tal y como hemos visto anteriormente. Se trata de un conjunto de datos que clasifica individuos de una población de Sudáfrica, indicando si tienen o no riesgo de padecer una enfermedad del corazón en función de los hábitos de vida (consumo de tabacco, obesidad, alcohol...).
+En este caso nos encontramos frente a un problema de clasificación, tal y como hemos visto anteriormente. Se trata de un conjunto de datos que clasifica individuos de una población de Sudáfrica, indicando si tienen o no riesgo de padecer una enfermedad del corazón en función de los hábitos de vida (consumo de tabaco, obesidad, alcohol...).
 \newline
 Para comenzar a buscar el modelo lineal que mejor se adapte a nuestro problema, comenzaremos seleccionando nuestro conjunto de entrenamiento y de prueba.
 
@@ -38,7 +38,7 @@ datos_ozone = read.csv("./datos/LAozone.data")
 datos_sudafrica = read.csv("./datos/africa.data")
 ```
 
-Si analizamos los datos obtenidos, podemos observar que existe un atributo, 'row.names', perteneciente a nuestro dataset de 'South African Heart Disease' que actua como clave primaria, es decir, como identificador, por tanto, dicho atributo nos es inutil para el aprendizaje de nuestro modelo lineal, por tanto, lo suprimimos:
+Si analizamos los datos obtenidos, podemos observar que existe un atributo, 'row.names', perteneciente a nuestro dataset de 'South African Heart Disease' que actúa como clave primaria, es decir, como identificador, así que dicho atributo nos es inútil para el aprendizaje de nuestro modelo lineal, y por tanto lo suprimimos:
 
 ```{r}
 datos_sudafrica = datos_sudafrica[,-which(names(datos_sudafrica) == "row.names")]
@@ -126,7 +126,6 @@ pred_test_m1sud[prob_test_m1sud >=0.5] = 1
 table(pred_test_m1sud, sudafrica_test[,ncol(sudafrica_test)])
 
 eout_m1sud = mean(pred_test_m1sud != sudafrica_test[,ncol(sudafrica_test)])
-cat("Eval corockn el modelo LR "); print(m1_sudafrica$call)
 eout_m1sud
 ```
 Obtenemos un error de 0.35, para nada aceptable, por tanto busquemos un modelo diferente empleando otra carasterística, la siguiente más representativa para el cálculo del modelo que en nuestro caso es famhist:
@@ -168,7 +167,7 @@ eout_m2sud
 ```
 
 ```{r}
-sudafrica_frame_3 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "ldl")])
+sudafrica_frame_3 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "ldl" | names(sudafrica_train) == "typea")])
 
 m3_sudafrica = lm(chd ~ . , data=sudafrica_frame_3)
 
