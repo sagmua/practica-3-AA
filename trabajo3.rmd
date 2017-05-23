@@ -13,7 +13,7 @@ setwd("~/")
 ```
 
 
-Procedemos a la lectura de datos tanto de la base de datos  de clasificación 'SouthAfrica' , como para la de regresión 'LAozone'. \newline
+Procedemos a la lectura de datos tanto de la base de datos de clasificación 'South African Heart Disease', como para la de regresión 'Los Angeles Ozone'. \newline
 
 Lo primero es hacer numéricos aquellos atributos que esten definidos como texto en nuestro conjunto de datos:
 
@@ -57,6 +57,36 @@ Para realizarar un modelo, vemos cuales son las características más representa
 regsub_sudafrica =regsubsets(datos_sudafrica[,-ncol(datos_sudafrica)], datos_sudafrica[,ncol(datos_sudafrica)])
 
 summary(regsub_sudafrica)
+
+
+```
+
+Ahora que sabemos cuáles son las características más recomendables para realizar modelos, vamos a construir una serie de ellos con algunas de estas características y validaremos con el conjunto de test para comprobar los errores que reflejan.
+
+```{r}
+###########################################################
+# ESTO ES UNA CHAPUZA Y NO SABEMOS SI HABRÁ QUE HACERLO ASÍ Y/O AQUÍ
+##########################################################
+
+sudafricaTrans = preProcess(sudafrica_test[,-ncol(sudafrica_test)], method = c("BoxCox", "center", "scale"),thresh = 0.9)
+sudafrica_test[,-ncol(sudafrica_test)] =predict(sudafricaTrans,sudafrica_test[,-ncol(sudafrica_test)])
+```
+
+```{r}
+m1_sudafrica = lm(chd ~ age+famhist, data=sudafrica_train)
+
+prob_train_m1sud = predict(m1_sudafrica, type="response")
+prob_test_m1sud = predict(m1_sudafrica, data.frame(sudafrica_test[,-ncol(sudafrica_test)]), type="response")
+
+pred_test_m1sud = rep(0, length(prob_test_m1sud))
+ # predicciones por defecto 0
+pred_test_m1sud[prob_test_m1sud >=0.5] = 1
+ # >= 0.5 clase 1
+table(pred_test_m1sud, sudafrica_test[,-ncol(sudafrica_test)])
+
+Eval = mean(pred_test_m1sud != sudafrica_test[,ncol(sudafrica_test)])
+cat("Eval con el modelo LR "); print(m1_sudafrica$call)
+print(Eval)
 
 
 ```
