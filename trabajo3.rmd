@@ -19,23 +19,53 @@ library("leaps", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources
 
 ```
 
+##Introducción:
+Para la realización de esta práctica obtendremos el ajuste de de modelos lineales basados en dos problemas centrados en dos conjuntos de datos diferentes. En primer lugar trabajaremos con un problema de clasificación, basado en el conjunto de datos "South African Heart Disease", para el reconocimiento de enfermedades cardiovasculares en una población de sudáfrica; y un problema de regresión, basado en el conjunto de datos "Los Angeles Ozone", para predecir los niveles de Ozono en Los angeles.
+\newline
 
+Comenzaremos primeramente abordando el problema de clasificación:
+
+##Clasificación: "South African Heart Disease"
+En este caso nos encontramos frente a un problema de clasificación, tal y como hemos visto anteriormente. Se trata de un conjunto de datos que clasifica individuos de una población de Sudáfrica, indicando si tienen o no riesgo de padecer una enfermedad del corazón en función de los hábitos de vida (consumo de tabacco, obesidad, alcohol...).
+\newline
+Para comenzar a buscar el modelo lineal que mejor se adapte a nuestro problema, comenzaremos seleccionando nuestro conjunto de entrenamiento y de prueba.
+
+###Lectura de datos:
 Procedemos a la lectura de datos tanto de la base de datos de clasificación 'South African Heart Disease', como para la de regresión 'Los Angeles Ozone'. \newline
 
-Lo primero es hacer numéricos aquellos atributos que esten definidos como texto en nuestro conjunto de datos:
-
-```{r, include=FALSE}
+```{r}
 datos_ozone = read.csv("./datos/LAozone.data")
 datos_sudafrica = read.csv("./datos/africa.data")
+```
+
+Si analizamos los datos obtenidos, podemos observar que existe un atributo, 'row.names', perteneciente a nuestro dataset de 'South African Heart Disease' que actua como clave primaria, es decir, como identificador, por tanto, dicho atributo nos es inutil para el aprendizaje de nuestro modelo lineal, por tanto, lo suprimimos:
+
+```{r}
+datos_sudafrica = datos_sudafrica[,-which(names(datos_sudafrica) == "row.names")]
+```
+
+Si seguimos con en análisis de los atributos observando sus tipos, nos damos cuenta de que existe un atributo de tipo factor, es decir una variable cualitativa, 'famhist', que nos indica el historial familiar de enfermedades de corazón, clasificado cmo 'ausente' o 'presente':
+
+```{r}
+class(datos_sudafrica$famhist)
+```
+Por tanto procedemos a interpretarlo de forma numérica, de forma que sustituimos 'presente' por 1 y 'ausente' por 0:
+```{r}
+
 
 #Cambiamos la columna 'famhist' que contiene caracteres por su equivalente en valores numéricos:
 datos_sudafrica = data.frame(famhist = (ifelse(datos_sudafrica$famhist=="Absent",0,1)),datos_sudafrica[,-which(names(datos_sudafrica) == "famhist")])
+```
 
-datos_sudafrica = datos_sudafrica[,-which(names(datos_sudafrica) == "row.names")]
+###Conjuntos de training y test usados
+En primer lugar, realizaremos una división del conjunto de datos. Para el conjunto 'train' de entrenamiento emplearemos el 80% del conjunto total de los datos, de forma que el 20% restante será empleado para test. En caso de realizar validación más adelante explicaremos el cómo.\newline
+Procedemos al particionamiento de los datos, así como a su lectura:
+```{r, include=FALSE}
+
 
 
 #Si queremos obtener un conjunto de indices train para luego ejecutar un modelo lineal sobre el train:
-train = sample (nrow(datos_sudafrica), round(nrow(datos_sudafrica)*0.7))
+train = sample (nrow(datos_sudafrica), round(nrow(datos_sudafrica)*0.8))
 sudafrica_train = datos_sudafrica[train,]
 sudafrica_test = datos_sudafrica[-train,]
 ```
