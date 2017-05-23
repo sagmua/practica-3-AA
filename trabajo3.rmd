@@ -12,10 +12,10 @@ knitr::opts_chunk$set(echo = TRUE)
 setwd("~/")
 set.seed(5)
 
-library("AppliedPredictiveModeling",lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+#library("AppliedPredictiveModeling",lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
 
-library("caret", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
-library("leaps", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+#library("caret", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+#library("leaps", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
 
 ```
 
@@ -102,17 +102,55 @@ eout_m1sud
 Obtenemos un error de 0.35, para nada aceptable, por tanto busquemos un modelo diferente empleando otra carasterística, la siguiente más representativa para el cálculo del modelo que en nuestro caso es famhist:
 
 ```{r}
-m1_sudafrica = lm(chd ~ famhist + age, data=sudafrica_train)
+sudafrica_frame_1 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist")])
 
-prob_test_m1sud = predict(m1_sudafrica, data.frame(sudafrica_test[,-ncol(sudafrica_test)]), type="response")
+m1_sudafrica = lm(chd ~ . , data=sudafrica_frame_1)
+
+prob_test_m1sud = predict(m1_sudafrica, data.frame(sudafrica_frame_1[,-which(names(sudafrica_frame_1) == "chd")]), type="response")
 
 pred_test_m1sud = rep(0, length(prob_test_m1sud))
  # predicciones por defecto 0
 pred_test_m1sud[prob_test_m1sud >=0.5] = 1
  # >= 0.5 clase 1
-table(pred_test_m1sud, sudafrica_test[,ncol(sudafrica_test)])
+table(pred_test_m1sud, sudafrica_frame_1[,which(names(sudafrica_frame_1) == "chd")])
 
-eout_m1sud = mean(pred_test_m1sud != sudafrica_test[,ncol(sudafrica_test)])
-cat("Eval con el modelo LR "); print(m1_sudafrica$call)
+eout_m1sud = mean(pred_test_m1sud != sudafrica_frame_1[,which(names(sudafrica_frame_1) == "chd")])
+
 eout_m1sud
+```
+
+```{r}
+sudafrica_frame_2 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "ldl")])
+
+m2_sudafrica = lm(chd ~ . , data=sudafrica_frame_2)
+
+prob_test_m2sud = predict(m2_sudafrica, data.frame(sudafrica_frame_2[,-which(names(sudafrica_frame_2) == "chd")]), type="response")
+
+pred_test_m2sud = rep(0, length(prob_test_m2sud))
+ # predicciones por defecto 0
+pred_test_m2sud[prob_test_m2sud >=0.5] = 1
+ # >= 0.5 clase 1
+table(pred_test_m2sud, sudafrica_frame_2[,which(names(sudafrica_frame_2) == "chd")])
+
+eout_m2sud = mean(pred_test_m2sud != sudafrica_frame_2[,which(names(sudafrica_frame_2) == "chd")])
+
+eout_m2sud
+```
+
+```{r}
+sudafrica_frame_3 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "ldl")])
+
+m3_sudafrica = lm(chd ~ . , data=sudafrica_frame_3)
+
+prob_test_m3sud = predict(m3_sudafrica, data.frame(sudafrica_frame_3[,-which(names(sudafrica_frame_3) == "chd")]), type="response")
+
+pred_test_m3sud = rep(0, length(prob_test_m3sud))
+ # predicciones por defecto 0
+pred_test_m3sud[prob_test_m3sud >=0.5] = 1
+ # >= 0.5 clase 1
+table(pred_test_m3sud, sudafrica_frame_3[,which(names(sudafrica_frame_3) == "chd")])
+
+eout_m3sud = mean(pred_test_m3sud != sudafrica_frame_3[,which(names(sudafrica_frame_3) == "chd")])
+
+eout_m3sud
 ```
