@@ -243,6 +243,6 @@ Una vez obtenida la lambda que proporciona un menor $E_{out}$, procedemos a gene
 
 ```{r}
 modelo_reg = glmnet(tr,etiquetas,alpha=0,lambda=crossvalidation$lambda.min)
-pred=predict(modelo_reg,s=crossvalidation$lambda.min,newx=as.matrix(sudafrica_test))
+#pred=predict(modelo_reg,s=crossvalidation$lambda.min,newx=as.matrix(sudafrica_test))
 ```
 A
