@@ -139,7 +139,6 @@ Ahora que sabemos cuáles son las características más recomendables para reali
 # ESTO ES UNA CHAPUZA Y NO SABEMOS SI HABRÁ QUE HACERLO ASÍ Y/O AQUÍ
 ##########################################################
 
-sudafricaTrans = preProcess(sudafrica_test[,-ncol(sudafrica_test)], method = c("BoxCox", "center", "scale"),thresh = 0.9)
 sudafrica_test[,-ncol(sudafrica_test)] =predict(sudafricaTrans,sudafrica_test[,-ncol(sudafrica_test)])
 ```
 
@@ -203,7 +202,7 @@ eout_m3sud
 ```
 
 ```{r}
-sudafrica_frame_4 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "tobacco" | names(sudafrica_train) == "ldl" | names(sudafrica_train) == "typea")])
+sudafrica_frame_4 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "tobacco" | names(sudafrica_train) == "ldl" | names(sudafrica_train) == "typea" | names(sudafrica_train) == "obesity")])
 
 m4_sudafrica = lm(chd ~ . , data=sudafrica_frame_4)
 eout_m4sud = calculoErrorMatrizConfusion(m4_sudafrica, sudafrica_test, "chd")
