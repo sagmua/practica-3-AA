@@ -75,7 +75,7 @@ Procedemos ahora al preprocesado de los datos. Podemos emplear varias técnicas 
 
 ```{r}
 #realizamos un attach de los datos para evitar repetir código:
-color <- c(rep('green',sum(chd==0)),rep('red',sum(chd==1)))
+color <- c(rep('green',sum(datos_sudafrica$chd ==0)),rep('red',sum(datos_sudafrica$chd==1)))
 
 
 pairs(datos_sudafrica, bg = color, pch = 22)
@@ -243,6 +243,13 @@ Una vez obtenida la lambda que proporciona un menor $E_{out}$, procedemos a gene
 
 ```{r}
 modelo_reg = glmnet(tr,etiquetas,alpha=0,lambda=crossvalidation$lambda.min)
-pred=predict(modelo_reg,s=crossvalidation$lambda.min,newx=as.matrix(sudafrica_test))
+print(modelo_reg)
 ```
-A
+Como podemos ver, aplicando regularización con el lambda obtenido tras la validación cruzada obtenemos una varianza del 0.23. Probemos ahora no aplizando regularización, empleando un hiperparámetro lambda de 0 y comprobemos su varianza:
+
+```{r}
+modelo_reg = glmnet(tr,etiquetas,alpha=0,lambda=0)
+print(modelo_reg)
+```
+
+Como podemos comprobar, las desviaciones obtenidas empleando o no regularización mediante weight-decay son similares, por tanto, comcluimos en que emplear regularización no merece la pena.
