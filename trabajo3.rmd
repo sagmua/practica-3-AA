@@ -150,24 +150,24 @@ Como en nuestro caso.
 
 Definimos una función para el cálculo del error, etiquetas mal clasificadas entre etiquetas totales:
 ```{r errorEtiquetas}
-calculoErrorMatrizConfusion  = function (modelo, test){
+calculoErrorMatrizConfusion  = function (modelo, test, etiquetas){
   
-  prob_test = predict(modelo, test[,-ncol(test)], type="response")
+  prob_test = predict(modelo, test[,-which(names(test) == etiquetas)], type="response")
   
   pred_test = rep(0, length(prob_test))
    # predicciones por defecto 0
   pred_test[prob_test >=0.5] = 1
    # >= 0.5 clase 1
-  matriz_conf = table(pred_test, test[,ncol(test)])
+  matriz_conf = table(pred_test, test[,which(names(test) == etiquetas)])
   print(matriz_conf)
   
-  eout = mean(pred_test != test[,ncol(test)])
+  eout = mean(pred_test != test[,which(names(test) == etiquetas)])
 }
 ```
 
 ```{r}
 m1_sudafrica = lm(chd ~ age, data=sudafrica_train)
-eout_m1sud = calculoErrorMatrizConfusion(m1_sudafrica, sudafrica_test)
+eout_m1sud = calculoErrorMatrizConfusion(m1_sudafrica, sudafrica_test, "chd")
 eout_m1sud
 ```
 Obtenemos un error de 0.35, para nada aceptable, por tanto busquemos un modelo diferente empleando otra carasterística, la siguiente más representativa para el cálculo del modelo que en nuestro caso es famhist:
@@ -178,7 +178,7 @@ sudafrica_frame_1 = data.frame(sudafrica_train[,which(names(sudafrica_train) == 
 m1_sudafrica = lm(chd ~ . , data=sudafrica_frame_1)
 
 
-eout_m1sud = calculoErrorMatrizConfusion(m1_sudafrica, sudafrica_test)
+eout_m1sud = calculoErrorMatrizConfusion(m1_sudafrica, sudafrica_test, "chd")
 
 eout_m1sud
 ```
@@ -188,7 +188,7 @@ sudafrica_frame_2 = data.frame(sudafrica_train[,which(names(sudafrica_train) == 
 
 m2_sudafrica = lm(chd ~ . , data=sudafrica_frame_2)
 
-eout_m2sud = calculoErrorMatrizConfusion(m2_sudafrica, sudafrica_test)
+eout_m2sud = calculoErrorMatrizConfusion(m2_sudafrica, sudafrica_test, "chd")
 
 eout_m2sud
 ```
@@ -197,7 +197,7 @@ eout_m2sud
 sudafrica_frame_3 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "tobacco" | names(sudafrica_train) == "ldl")])
 
 m3_sudafrica = lm(chd ~ . , data=sudafrica_frame_3)
-eout_m3sud = calculoErrorMatrizConfusion(m3_sudafrica, sudafrica_test)
+eout_m3sud = calculoErrorMatrizConfusion(m3_sudafrica, sudafrica_test, "chd")
 
 eout_m3sud
 ```
@@ -206,7 +206,7 @@ eout_m3sud
 sudafrica_frame_4 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "tobacco" | names(sudafrica_train) == "ldl" | names(sudafrica_train) == "typea")])
 
 m4_sudafrica = lm(chd ~ . , data=sudafrica_frame_4)
-eout_m4sud = calculoErrorMatrizConfusion(m4_sudafrica, sudafrica_test)
+eout_m4sud = calculoErrorMatrizConfusion(m4_sudafrica, sudafrica_test, "chd")
 
 eout_m4sud
 ```
