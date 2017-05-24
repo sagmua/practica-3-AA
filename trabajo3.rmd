@@ -74,7 +74,6 @@ Procedemos ahora al preprocesado de los datos. Podemos emplear varias técnicas 
 
 ```{r}
 #realizamos un attach de los datos para evitar repetir código:
-attach(datos_sudafrica)
 color <- c(rep('green',sum(chd==0)),rep('red',sum(chd==1)))
 
 
@@ -202,10 +201,19 @@ eout_m3sud
 ```
 
 ```{r}
-sudafrica_frame_4 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "tobacco" | names(sudafrica_train) == "ldl" | names(sudafrica_train) == "typea" | names(sudafrica_train) == "typea")])
+sudafrica_frame_4 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "tobacco" | names(sudafrica_train) == "ldl" | names(sudafrica_train) == "typea")])
 
 m4_sudafrica = lm(chd ~ . , data=sudafrica_frame_4)
 eout_m4sud = calculoErrorMatrizConfusion(m4_sudafrica, sudafrica_test, "chd")
 
 eout_m4sud
+```
+
+```{r}
+sudafrica_frame_5 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "tobacco" | names(sudafrica_train) == "ldl" | names(sudafrica_train) == "typea")])
+
+m5_sudafrica = lm(chd ~ I(age^2) + famhist + tobacco + ldl + typea, data=sudafrica_frame_5)
+eout_m5sud = calculoErrorMatrizConfusion(m5_sudafrica, sudafrica_test, "chd")
+
+eout_m5sud
 ```
