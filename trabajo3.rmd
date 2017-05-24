@@ -253,3 +253,11 @@ print(modelo_reg)
 ```
 
 Como podemos comprobar, las desviaciones obtenidas empleando o no regularización mediante weight-decay son similares, por tanto, comcluimos en que emplear regularización no merece la pena.
+
+##Regresión: "LA Ozone"
+En este caso, el problema de regresión a abortar se basa en los registros de concentración de ozono en la atmósfera de Los Angeles. 
+
+Apartir de dichos datos, buscamos predecir
+These data record the level of atmospheric ozone concentration from
+eight daily meteorological measurements made in the Los Angeles basin
+in 1976.
