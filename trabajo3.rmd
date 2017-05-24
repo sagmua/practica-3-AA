@@ -12,30 +12,32 @@ knitr::opts_chunk$set(echo = TRUE)
 setwd("~/")
 set.seed(5)
 
-library("AppliedPredictiveModeling",lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+library("AppliedPredictiveModeling")
+#,lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
 
-library("caret", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
-library("leaps", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+library("caret")
+#, lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+library("leaps")
+#, lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
 
 ```
 \newpage
 
 ##Introducción:
-Para la realización de esta práctica obtendremos el ajuste de de modelos lineales basados en dos problemas centrados en dos conjuntos de datos diferentes. En primer lugar trabajaremos con un problema de clasificación, basado en el conjunto de datos "South African Heart Disease", para el reconocimiento de enfermedades cardiovasculares en una población de sudáfrica; y un problema de regresión, basado en el conjunto de datos "Los Angeles Ozone", para predecir los niveles de Ozono en Los angeles.
+Para la realización de esta práctica obtendremos el ajuste de modelos lineales basados en dos problemas centrados en dos conjuntos de datos diferentes. En primer lugar trabajaremos con un problema de clasificación, basado en el conjunto de datos "South African Heart Disease", para el reconocimiento de enfermedades cardiovasculares en una población de Sudáfrica; y en segundo lugar con un problema de regresión, basado en el conjunto de datos "Los Angeles Ozone", para predecir los niveles de ozono en Los Angeles.
 \newline
 
 Comenzaremos primeramente abordando el problema de clasificación:
 
 ##Clasificación: "South African Heart Disease"
-En este caso nos encontramos frente a un problema de clasificación, tal y como hemos visto anteriormente. Se trata de un conjunto de datos que clasifica individuos de una población de Sudáfrica, indicando si tienen o no riesgo de padecer una enfermedad del corazón en función de los hábitos de vida (consumo de tabaco, obesidad, alcohol...).
+En este caso nos encontramos frente a un problema de clasificación, tal y como hemos visto anteriormente. Se trata de un conjunto de datos que clasifica individuos de una población de Sudáfrica, indicando si padecen o no una enfermedad del corazón en función de los hábitos de vida (consumo de tabaco, obesidad, alcohol...).
 \newline
-Para comenzar a buscar el modelo lineal que mejor se adapte a nuestro problema, comenzaremos seleccionando nuestro conjunto de entrenamiento y de prueba.
+Como primer paso para abordar el problema, leeremos los datos y los dividiremos seleccionando nuestro conjunto de entrenamiento y de prueba.
 
 ###Lectura de datos:
 Procedemos a la lectura de datos tanto de la base de datos de clasificación 'South African Heart Disease', como para la de regresión 'Los Angeles Ozone'. \newline
 
 ```{r}
-datos_ozone = read.csv("./datos/LAozone.data")
 datos_sudafrica = read.csv("./datos/africa.data")
 ```
 
