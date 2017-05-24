@@ -149,20 +149,27 @@ sudafrica_test[,-ncol(sudafrica_test)] =predict(sudafricaTrans,sudafrica_test[,-
 Para empezar calculamos un modelo lineal de forma que predecimos chd (etiquetas) a partir del atributo más representativo, en nuestro caso como hemos comprobado 'age'. \newline
 
 Una vez calculado el modelo, empleamos la función predict para obtener la probabilidad de cada etiqueta.
-Como en nuestro caso 
+Como en nuestro caso.
+
+Definimos una función para el cálculo del error, etiquetas mal clasificadas entre etiquetas totales:
+```{r errorEtiquetas}
+calculoErrorMatrizConfusion  = function (modelo, test){
+  
+  prob_test = predict(modelo, test[,-ncol(test)], type="response")
+  
+  pred_test = rep(0, length(prob_test))
+   # predicciones por defecto 0
+  pred_test[prob_test >=0.5] = 1
+   # >= 0.5 clase 1
+  table(pred_test, test[,ncol(test)])
+  
+  eout = mean(pred_test != test[,ncol(test)])
+}
+```
 
 ```{r}
 m1_sudafrica = lm(chd ~ age, data=sudafrica_train)
-
-prob_test_m1sud = predict(m1_sudafrica, data.frame(sudafrica_test[,-ncol(sudafrica_test)]), type="response")
-
-pred_test_m1sud = rep(0, length(prob_test_m1sud))
- # predicciones por defecto 0
-pred_test_m1sud[prob_test_m1sud >=0.5] = 1
- # >= 0.5 clase 1
-table(pred_test_m1sud, sudafrica_test[,ncol(sudafrica_test)])
-
-eout_m1sud = mean(pred_test_m1sud != sudafrica_test[,ncol(sudafrica_test)])
+eout_m1sud = calculoErrorMatrizConfusion(m1_sudafrica, sudafrica_test)
 eout_m1sud
 ```
 Obtenemos un error de 0.35, para nada aceptable, por tanto busquemos un modelo diferente empleando otra carasterística, la siguiente más representativa para el cálculo del modelo que en nuestro caso es famhist:
