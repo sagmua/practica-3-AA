@@ -16,6 +16,7 @@ library("AppliedPredictiveModeling")
 
 library("caret")
 library("leaps")
+library("glmnet")
 
 ```
 \newpage
@@ -208,6 +209,7 @@ eout_m4sud = calculoErrorMatrizConfusion(m4_sudafrica, sudafrica_test, "chd")
 
 eout_m4sud
 ```
+Como podemos comprobar en los modelos lineales analizados y los errores correspondientes obtenidos, nos encontramos frente a una base de datos no lineal. Para mejorar el error hemos realizado diferentes transformaciones lineales sobre los atributos seleccionados como más representativos.\newline
 
 ```{r}
 sudafrica_frame_5 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "tobacco" | names(sudafrica_train) == "ldl" | names(sudafrica_train) == "typea")])
@@ -216,4 +218,24 @@ m5_sudafrica = lm(chd ~ I(age^2) + famhist + tobacco + ldl + typea, data=sudafri
 eout_m5sud = calculoErrorMatrizConfusion(m5_sudafrica, sudafrica_test, "chd")
 
 eout_m5sud
+```
+
+Tras realizar transformaciones logarítmicas y cuadráticas sobre los datos, experimentalmente hemos reducido el error fuera de la muestra a un 0.23 empleando una transformación cuadrática sobre el atributo 'age' (el que mejor representa la muestra como hemos visto en regSubsets).
+
+###Regularización
+Procedamos ahora  a realiar una regularización empleando Weight-decay mediante la función glmnet. Dicha función recibe los siguientes hiperparámetros:
+
+*\textbf{Alpha} = Para aplicar el weight-decay utilizaremos dicho argumento con valor 0.
+*\textbf{lambda} = Parámetro de regularización. (Multiplica la matriz de identidad)
+
+Hace falta tener en cuenta antes la correcta elección del lambda, de forma que escojamos el mejor lambda.
+En lugar de escoger un lambda de forma arbitraria, sería mejor emplear validación cruzada
+
+```{r}
+etiquetas = sudafrica_train[,which(names(sudafrica_train) == "chd")]
+tr = sudafrica_train[,-which(names(sudafrica_train) == "chd")]
+tr = as.matrix(tr)
+crossvalidation =cv.glmnet(tr,etiquetas,alpha=0)
+glmnet(tr,etiquetas,alpha=0,lambda=crossvalidation$lambda.min)
+
 ```
