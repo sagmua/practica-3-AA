@@ -33,124 +33,116 @@ En este caso nos encontramos frente a un problema de clasificación, tal y como 
 Como primer paso para abordar el problema, leeremos los datos y los dividiremos seleccionando nuestro conjunto de entrenamiento y de prueba.
 
 ###Lectura de datos:
-Procedemos a la lectura de datos tanto de la base de datos de clasificación 'South African Heart Disease', como para la de regresión 'Los Angeles Ozone'. \newline
+Procedemos a la lectura de la base de datos de clasificación 'South African Heart Disease'. \newline
 
 ```{r}
 datos_sudafrica = read.csv("./datos/africa.data")
+head(datos_sudafrica)
 ```
 
-Si analizamos los datos obtenidos, podemos observar que existe un atributo, 'row.names', perteneciente a nuestro dataset de 'South African Heart Disease' que actúa como clave primaria, es decir, como identificador, así que dicho atributo nos es inútil para el aprendizaje de nuestro modelo lineal, y por tanto lo suprimimos:
+Si analizamos los datos obtenidos, podemos observar que existe un atributo, 'row.names', que actúa como clave primaria, es decir, como identificador, así que dicho atributo nos es inútil para el aprendizaje de un modelo lineal, y por tanto lo suprimimos:
 
 ```{r}
 datos_sudafrica = datos_sudafrica[,-which(names(datos_sudafrica) == "row.names")]
 ```
 
-Si seguimos con en análisis de los atributos observando sus tipos, nos damos cuenta de que existe un atributo de tipo factor, es decir una variable cualitativa, 'famhist', que nos indica el historial familiar de enfermedades de corazón, clasificado cmo 'ausente' o 'presente':
+Si seguimos con el análisis de los atributos observando sus tipos, nos damos cuenta de que existe un atributo de tipo factor, es decir, se trata de una variable cualitativa. Este atributo es 'famhist', que nos indica el historial familiar de enfermedades de corazón, clasificado como 'ausente' si no se ha producido ningún caso en la familia, o 'presente' si es al contrario:
 
 ```{r}
 class(datos_sudafrica$famhist)
 ```
 Por tanto procedemos a interpretarlo de forma numérica, de forma que sustituimos 'presente' por 1 y 'ausente' por 0:
 ```{r}
-
-
 #Cambiamos la columna 'famhist' que contiene caracteres por su equivalente en valores numéricos:
 datos_sudafrica = data.frame(famhist = (ifelse(datos_sudafrica$famhist=="Absent",0,1)),datos_sudafrica[,-which(names(datos_sudafrica) == "famhist")])
 ```
 
 ###Conjuntos de training y test usados
-En primer lugar, realizaremos una división del conjunto de datos. Para el conjunto 'train' de entrenamiento emplearemos el 80% del conjunto total de los datos, de forma que el 20% restante será empleado para test. En caso de realizar validación más adelante explicaremos el cómo.\newline
-Procedemos al particionamiento de los datos, así como a su lectura:
+A continuación, realizaremos el particionamiento del conjunto de datos. Para el conjunto 'train' de entrenamiento emplearemos el 80% del conjunto total de los datos, de forma que el 20% restante será empleado para test. Hemos decidido utilizar este porcentaje dado que se nos ha explicado que un buen reparto entre train y test oscila entre dos terceras partes para train, o bien hasta un 80%, utilizando el resto para test.\newline
+Procedemos al particionamiento de los datos, así como a su almacenamiento en respectivas variables:
 ```{r, include=FALSE}
 #Si queremos obtener un conjunto de indices train para luego ejecutar un modelo lineal sobre el train:
 train = sample (nrow(datos_sudafrica), round(nrow(datos_sudafrica)*0.8))
-#definimos ambos conjuntos en dos data sets diferentes:
+#definimos ambos conjuntos en dos data.frame diferentes:
 sudafrica_train = datos_sudafrica[train,]
 sudafrica_test = datos_sudafrica[-train,]
 ```
 
 
 ###Preprocesamiento de los datos
-Procedemos ahora al preprocesado de los datos. Podemos emplear varias técnicas para la realización del preprocesamiento de datos. Pero antes de nada comencemos por realizar una vista preeliminar emplearemos el pairs, de tal forma que le indicaremos que compare cada atributo de los  (incluido la clase) con todos los demás, de forma que obtengamos una matriz simétrica de gráficas, con los colores indicando la etiqueta según pueda padecer enfermedad (rojo) o no (verde):
+Antes de entrar en el preprocesamiento, consideramos interesante realizar una vista preliminar de las gráficas de cada atributo de la base de datos siendo reflejado con todos los demás. Así obtenemos una matriz simétrica de gráficas, con los colores indicando la etiqueta según padezca enfermedad (rojo) o no (verde):
 
 ```{r}
-#realizamos un attach de los datos para evitar repetir código:
-color <- c(rep('green',sum(datos_sudafrica$chd ==0)),rep('red',sum(datos_sudafrica$chd==1)))
-
+color = c(rep('green',sum(datos_sudafrica$chd ==0)),rep('red',sum(datos_sudafrica$chd==1)))
 
 pairs(datos_sudafrica, bg = color, pch = 22)
 ```
 \newline
-Al representar la matriz de diagramas de dispersión de los datos podemos tener una vista preeliminar de la dispersión de los diferentes datos.
-Como podemos observar en la matriz de gráficas, la dispersión entre los datos es alta, de forma que apriori los únicos atributos que consideramos que se pueden estar relacionados son 'adiposity' con 'obesity'.
+Al representar la matriz de diagramas podemos hacernos una primera idea de la dispersión de los datos. Como podemos observar esta dispersión es alta, y a priori los únicos atributos que consideramos que pueden estar sustancialmente relacionados entre sí son 'adiposity' y 'obesity'.
 
-Veamos entonces si es podible realizar una reducción de la dimensionalidad de los datos mediante la aplicación de PCA (Computing the Principal Components) sobre el conjunto de datos para intentar comprobar si existen datos redundantes que puedan ser recombinados en nuevas características que sean resultado de combinaciones lineales de ellos. Prestaremos especial atención a los atributos obesidad y adiposidad. \newline
+Como estamos tratando un problema de clasificación binaria, generar las gráficas del atributo clase no nos da ninguna ventaja, pero lo hemos dejado en la matriz final para que se pueda apreciar que no aporta ninguna información. Esto es debido a que para todos los atributos, existen casos de ambas clases. De forma contraria, la clase se podría llegar a definir en función de un único parámetro, algo prácticamente inimaginable en un problema real.
 
+Veamos entonces si es posible realizar una reducción de la dimensionalidad de los datos mediante la aplicación de PCA (Computing the Principal Components) sobre el conjunto de datos para intentar comprobar si existen atributos redundantes. Estos atributos redundantes podrían ser recombinados en nuevas características producto de combinaciones lineales de ellos. Prestaremos especial atención a los atributos 'obesity' y 'adiposity' por el motivo indicado anteriormente. \newline
 
 PCA calcula la varianza de cada atributo respecto a los demás, de forma que aquellos atributos que posean menor varianza (cercana a cero) con respecto a los demás serán considerados como redundantes.\newline
 
-Además, para no arriesgar mucho (puesto que PCA va a ciegas) representaremos sólo aquellos componentes que expliquen hasta el 90% de la variabilidad de los datos (es necesario que los datos estén escalados y centrados para aplicar PCA):
+Además, para no arriesgar mucho (puesto que PCA trabaja "a ciegas") representaremos sólo aquellos componentes que expliquen hasta el 90% de la variabilidad de los datos (es necesario que los datos estén escalados y centrados para aplicar PCA):
 
 ```{r}
 sudafricaTrans = preProcess(datos_sudafrica, method = c("BoxCox", "center", "scale", "pca"),thresh = 0.9)
 summary(sudafricaTrans$rotation)
 ```
 Como podemos observar en la tabla, se han reducido los atributos a 8 atributos (combinaciones lineales de los 10 anteriores).
-Pero si observamos las varianzas de cada atributo en la tabla respecto al resto de atributos, vemos que no existe ningun atributo cuyas varianzas sean cercanas todas a 0, por lo tanto, aún así para asegurarnos lo comprobamos mediante la siguiente función:
+Pero si observamos las varianzas de cada atributo en la tabla respecto al resto de atributos, vemos que no existe ningun atributo cuyas varianzas sean cercanas todas a 0. Aún así, para asegurarnos lo comprobamos mediante la siguiente función:
 ```{r}
 nearZeroVar(sudafricaTrans$rotation)
 ```
-Como comprobamos con la función nearZero observamos que no existe ningun atributo cuyas varianzas respecto a las demás sean todas cercanas a cero, tal y como decíamos, esto queire decir que todos los atributos son considerados representativos, pues poseen dispersión. Por conclusión, no realizaremos ninguna reducción de atributos.\newline
+Como comprobamos con la función nearZeroVar no existe ningun atributo cuyas varianzas respecto a las demás sean todas cercanas a 0, y por tanto todos los atributos son considerados representativos, pues poseen dispersión. En conclusión, no realizaremos ninguna reducción de atributos.\newline
 
-Para conlcuir el preprocesamiento de los datos, realizaremos los siguientes preprocesamientos de los datos:
+Para conlcuir el preprocesamiento de los datos, realizaremos las siguientes operaciones sobre ellos:
 
 * \textbf{Escalado}: Se trata de dividir cada uno de los atributos por su desviación típica.
 * \textbf{Centrado}: Calculamos la media de cada atributo y se la restamos para cada valor.
 * \textbf{Box-Cox}: Se trata de intentar reducir el sesgo de cada atributo, para intentar hacer este mas próximo a una distribución Gaussiana.
 
-Para aplicar las transformaciones, emplearemos la función preprocess sobre nuestro conjunto Train, de forma que realizando un predict sobre el preprocesamiento obtenido, obtengamos el conjunto de datos train preprocesado:
-
+Para aplicar las transformaciones, emplearemos la función preProcess sobre nuestro conjunto train, de forma que realizando un predict sobre el objeto transformación obtenido, obtengamos el conjunto de datos train preprocesado. A continuación, realizaremos las mismas transformaciones sobre el conjunto de test, utilizando el mismo objeto transformación:
 
 ```{r}
 sudafricaTrans = preProcess(sudafrica_train[,-ncol(sudafrica_train)], method = c("BoxCox", "center", "scale"),thresh = 0.9)
 sudafrica_train[,-ncol(sudafrica_train)] =predict(sudafricaTrans,sudafrica_train[,-ncol(sudafrica_train)])
+sudafrica_test[,-ncol(sudafrica_test)] =predict(sudafricaTrans,sudafrica_test[,-ncol(sudafrica_test)])
 ```
 
 
 ###Estimación de parámetros
-Antes de realizar un modelo, vemos cuales son las características más representativas (varianza mayor), de forma que no empecemos a realizar modelos a ciegas, sino fijándonos en la calidad de sus atributos.\newline
+Antes de realizar un modelo, veamos cuáles son las características más representativas (las que ofrecen varianza mayor con respecto al resto de datos), de forma que no empecemos a realizar modelos a ciegas, sino fijándonos en la calidad de sus atributos.\newline
 
-Para ello emplearemos la función regsubsets. Esta función realiza una búsqueda exhaustiva (empleando Branch&Bound) de los mejores conjuntos de atributos en nuestro conjunto de datos (en nuestro caso train) para predecir en una regresión lineal:
+Para ello emplearemos la función regsubsets. Esta función realiza una búsqueda exhaustiva (empleando Branch&Bound) de las mejores agrupaciones de atributos en nuestro conjunto de entrenamiento para predecir en una regresión lineal:
 
 ```{r}
 regsub_sudafrica =regsubsets(datos_sudafrica[,-ncol(datos_sudafrica)], datos_sudafrica[,ncol(datos_sudafrica)])
 
 summary(regsub_sudafrica)
 ```
-Como podemos observar, los mejores atributos son 'age' y 'famhist', seguidos por 'tobbaco' y 'ldl'.\newline
+En la gráfica aportada por la función, interpretamos como atributos más representativos aquellos cuyas columnas tienen más estrellas. Nuestro criterio a seguir a la hora de generar modelos lineales será, por tanto, tratar de predecir utilizando agrupaciones de atributos considerados representativos, comenzando por el mejor y de forma descendente. Para mostrar un ejemplo que explique la gráfica, los mejores atributos serían 'age' y 'famhist', y los peores 'adiposity' y 'alcohol'.\newline
 
 Ahora que sabemos cuáles son las características más recomendables para realizar modelos, vamos a construir una serie de ellos con algunas de estas características y validaremos con el conjunto de test para comprobar los errores que reflejan.
 
 
 ###Definición de modelos
 
-```{r}
-###########################################################
-# ESTO ES UNA CHAPUZA Y NO SABEMOS SI HABRÁ QUE HACERLO ASÍ Y/O AQUÍ
-##########################################################
+Para empezar, calculamos un sencillo modelo lineal con el que intentamos predecir 'chd' (nuestras etiquetas) a partir del atributo más representativo, en nuestro caso y como hemos comprobado, 'age'.\newline
 
-sudafrica_test[,-ncol(sudafrica_test)] =predict(sudafricaTrans,sudafrica_test[,-ncol(sudafrica_test)])
+```{r}
+m_muestra_sudafrica = lm(chd ~ age, data=sudafrica_train)
 ```
 
-Para empezar calculamos un modelo lineal de forma que predecimos chd (etiquetas) a partir del atributo más representativo, en nuestro caso como hemos comprobado 'age'. \newline
+Para el cálculo del error, y a fin de intentar aportar un punto de generalización al problema a abordar, definimos una función que calcula el error (etiquetas mal clasificadas en función de etiquetas totales) y muestra la matriz de confusión en el conjunto de test a partir de un modelo:
 
-Una vez calculado el modelo, empleamos la función predict para obtener la probabilidad de cada etiqueta.
-Como en nuestro caso.
-
-Definimos una función para el cálculo del error, etiquetas mal clasificadas entre etiquetas totales:
 ```{r errorEtiquetas}
 calculoErrorMatrizConfusion  = function (modelo, test, etiquetas){
-  
+  # Una vez calculado el modelo, empleamos la función predict
+  # para obtener la probabilidad de cada etiqueta.
   prob_test = predict(modelo, test[,-which(names(test) == etiquetas)], type="response")
   
   pred_test = rep(0, length(prob_test))
@@ -160,67 +152,100 @@ calculoErrorMatrizConfusion  = function (modelo, test, etiquetas){
   matriz_conf = table(pred_test, test[,which(names(test) == etiquetas)])
   print(matriz_conf)
   
-  eout = mean(pred_test != test[,which(names(test) == etiquetas)])
+  etest = mean(pred_test != test[,which(names(test) == etiquetas)])
 }
 ```
 
-```{r}
-m1_sudafrica = lm(chd ~ age, data=sudafrica_train)
-eout_m1sud = calculoErrorMatrizConfusion(m1_sudafrica, sudafrica_test, "chd")
-eout_m1sud
-```
-Obtenemos un error de 0.35, para nada aceptable, por tanto busquemos un modelo diferente empleando otra carasterística, la siguiente más representativa para el cálculo del modelo que en nuestro caso es famhist:
+Utilizamos nuestra función para calcular el error del modelo de muestra generado anteriormente:
 
 ```{r}
-sudafrica_frame_1 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist")])
-
-m1_sudafrica = lm(chd ~ . , data=sudafrica_frame_1)
-
-
-eout_m1sud = calculoErrorMatrizConfusion(m1_sudafrica, sudafrica_test, "chd")
-
-eout_m1sud
+etest_mmuestrasud = calculoErrorMatrizConfusion(m_muestra_sudafrica, sudafrica_test, "chd")
+etest_mmuestrasud
 ```
+Obtenemos un error de 0.337, pero se trata de un modelo excesivamente simple como para reflejar buenos resultados en un problema real. Por tanto busquemos un modelo diferente empleando otra carasterística, la siguiente más representativa en el conjunto de datos, que en nuestro caso es 'famhist':
 
 ```{r}
-sudafrica_frame_2 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "tobacco")])
+m1_sudafrica = lm(chd ~ age + famhist, data=sudafrica_train)
 
-m2_sudafrica = lm(chd ~ . , data=sudafrica_frame_2)
-
-eout_m2sud = calculoErrorMatrizConfusion(m2_sudafrica, sudafrica_test, "chd")
-
-eout_m2sud
+etest_m1sud = calculoErrorMatrizConfusion(m1_sudafrica, sudafrica_test, "chd")
+etest_m1sud
 ```
+
+Utilizando dos características el error en el conjunto de test desciende hasta un 0.326. Seguimos probando nuevos modelos, así que añadimos la siguiente característica recomendada por regsubsets, 'tobacco':
 
 ```{r}
-sudafrica_frame_3 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "tobacco" | names(sudafrica_train) == "ldl")])
+m2_sudafrica = lm(chd ~ age + famhist + tobacco, data=sudafrica_train)
 
-m3_sudafrica = lm(chd ~ . , data=sudafrica_frame_3)
-eout_m3sud = calculoErrorMatrizConfusion(m3_sudafrica, sudafrica_test, "chd")
-
-eout_m3sud
+etest_m2sud = calculoErrorMatrizConfusion(m2_sudafrica, sudafrica_test, "chd")
+etest_m2sud
 ```
+
+Un error reflejado de 0.293 ya se acerca más a lo que buscamos, poco a poco vamos avanzando hacia un error menor en el conjunto de validación. Como aún nos queda una buena cantidad de características por probar, añadimos una más al siguiente modelo, 'ldl':
 
 ```{r}
-sudafrica_frame_4 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "tobacco" | names(sudafrica_train) == "ldl" | names(sudafrica_train) == "typea")])
+m3_sudafrica = lm(chd ~ age + famhist + tobacco + ldl, data=sudafrica_train)
 
-m4_sudafrica = lm(chd ~ . , data=sudafrica_frame_4)
-eout_m4sud = calculoErrorMatrizConfusion(m4_sudafrica, sudafrica_test, "chd")
-
-eout_m4sud
+etest_m3sud = calculoErrorMatrizConfusion(m3_sudafrica, sudafrica_test, "chd")
+etest_m3sud
 ```
-Como podemos comprobar en los modelos lineales analizados y los errores correspondientes obtenidos, nos encontramos frente a una base de datos no lineal. Para mejorar el error hemos realizado diferentes transformaciones lineales sobre los atributos seleccionados como más representativos.\newline
+
+En esta ocasión tenemos un error de 0.261, que mejora sustancialmente al que teníamos antes. Probemos con la siguiente característica, 'typea':
 
 ```{r}
-sudafrica_frame_5 = data.frame(sudafrica_train[,which(names(sudafrica_train) == "chd" | names(sudafrica_train) == "age" | names(sudafrica_train) == "famhist" | names(sudafrica_train) == "tobacco" | names(sudafrica_train) == "ldl" | names(sudafrica_train) == "typea")])
+m4_sudafrica = lm(chd ~ age + famhist + tobacco + ldl + typea, data=sudafrica_train)
 
-m5_sudafrica = lm(chd ~ I(age^2) + famhist + tobacco + ldl + typea, data=sudafrica_frame_5)
-eout_m5sud = calculoErrorMatrizConfusion(m5_sudafrica, sudafrica_test, "chd")
-
-eout_m5sud
+etest_m4sud = calculoErrorMatrizConfusion(m4_sudafrica, sudafrica_test, "chd")
+etest_m4sud
 ```
 
-Tras realizar transformaciones logarítmicas y cuadráticas sobre los datos, experimentalmente hemos reducido el error fuera de la muestra a un 0.23 empleando una transformación cuadrática sobre el atributo 'age' (el que mejor representa la muestra como hemos visto en regSubsets).
+El error se reduce a 0.25, lo podemos empezar a considerar un error aceptable. No obstante, sigamos probando a añadir la siguiente característica según regsubsets, 'obesity':
+
+```{r}
+m5_sudafrica = lm(chd ~ age + famhist + tobacco + ldl + typea + obesity, data=sudafrica_train)
+
+etest_m5sud = calculoErrorMatrizConfusion(m5_sudafrica, sudafrica_test, "chd")
+etest_m5sud
+```
+
+Aquí encontramos el primer bache, y es que aumentando el número de características empeoramos el error en el test. Seguramente sea debido a sobreajuste, pero para asegurarnos vamos a sustituir 'obesity' por el siguiente atributo más válido según regsubsets, 'sbp':
+
+```{r}
+m6_sudafrica = lm(chd ~ age + famhist + tobacco + ldl + typea + sbp, data=sudafrica_train)
+
+etest_m6sud = calculoErrorMatrizConfusion(m6_sudafrica, sudafrica_test, "chd")
+etest_m6sud
+```
+
+#######################################################
+#######################################################
+#######################################################
+¿Transformaciones lineales o NO lineales?
+#######################################################
+#######################################################
+#######################################################
+Efectivamente, seguimos encontrando errores peores, por lo que abandonamos esta línea de exploración al estar enfrentándonos a una base de datos no lineal. Para mejorar el error hemos realizado diferentes transformaciones lineales sobre los atributos seleccionados como más representativos.\newline
+
+Volvemos al modelo en el que menor error obtuvimos, el formado por los 5 mejores atributos según regsubsets, y probamos a utilizar una variable cuadrática, en este caso elevar al cuadrado la característica 'age':
+
+```{r}
+m7_sudafrica = lm(chd ~ I(age^2) + famhist + tobacco + ldl + typea, data=sudafrica_train)
+
+eout_m7sud = calculoErrorMatrizConfusion(m7_sudafrica, sudafrica_test, "chd")
+eout_m7sud
+```
+
+En este modelo hemos conseguido otra mejora, esta vez el error desciende hasta 0.239. Seguiremos intentando encontrar mejores errores realizando nuevas transformaciones, ahora una cúbica.
+
+```{r}
+m8_sudafrica = lm(chd ~ I(age^3) + famhist + tobacco + ldl + typea, data=sudafrica_train)
+
+eout_m8sud = calculoErrorMatrizConfusion(m8_sudafrica, sudafrica_test, "chd")
+eout_m8sud
+```
+
+El error no es malo pero sigue siendo un peor modelo que el mejor que hemos generado ahora mismo. Hemos comprobado también que es contraproducente realizar transformaciones con logaritmos y raíces debido a la cantidad de datos negativos que tiene la base de datos una vez normalizada. 
+
+En resumen, tras realizar distintas combinaciones de atributos y tratar de predecir con ellos, utilizando alguna transformación no lineal, experimentalmente hemos reducido el error fuera de la muestra a un 0.239. Este error ha venido en un modelo con transformación cuadrática sobre el atributo 'age' (el que mejor representa la muestra como hemos visto en regSubsets) y los 4 siguientes mejores atributos.
 
 ###Regularización
 Procedamos ahora  a realiar una regularización empleando Weight-decay mediante la función glmnet. Dicha función recibe los siguientes hiperparámetros:
