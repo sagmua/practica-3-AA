@@ -60,7 +60,7 @@ datos_sudafrica = data.frame(famhist = (ifelse(datos_sudafrica$famhist=="Absent"
 ###Conjuntos de training y test usados
 A continuación, realizaremos el particionamiento del conjunto de datos. Para el conjunto 'train' de entrenamiento emplearemos el 80% del conjunto total de los datos, de forma que el 20% restante será empleado para test. Hemos decidido utilizar este porcentaje dado que se nos ha explicado que un buen reparto entre train y test oscila entre dos terceras partes para train, o bien hasta un 80%, utilizando el resto para test.\newline
 Procedemos al particionamiento de los datos, así como a su almacenamiento en respectivas variables:
-```{r, include=FALSE}
+```{r}
 #Si queremos obtener un conjunto de indices train para luego ejecutar un modelo lineal sobre el train:
 train = sample (nrow(datos_sudafrica), round(nrow(datos_sudafrica)*0.8))
 #definimos ambos conjuntos en dos data.frame diferentes:
@@ -285,5 +285,26 @@ Como conclusión final, un modelo que utilice suficiente número de atributos pa
 ##Regresión: "LA Ozone"
 En este caso, el problema de regresión a abortar se basa en los registros de concentración de ozono en la atmósfera de Los Angeles. 
 
+<<<<<<< HEAD
 Apartir de dichos datos, buscamos predecir la cota máxima por hora de la concentración de ozono de la ciudad de Upland.
-Procedamos a realizar  atributos pertenecientes a la base de datos 
+Procedamos a realizar la lectura de los datos obtenidos:
+
+```{r}
+datos_ozone = read.csv("./datos/LAozone.data")
+head(datos_ozone)
+```
+
+```{r}
+#Si queremos obtener un conjunto de indices train para luego ejecutar un modelo lineal sobre el train:
+train = sample (nrow(datos_ozone), round(nrow(datos_ozone)*0.8))
+#definimos ambos conjuntos en dos data.frame diferentes:
+ozone_train = datos_ozone[train,]
+ozone_test = datos_ozone[-train,]
+```
+
+```{r}
+color = c(rep('green',sum(datos_sudafrica$chd ==0)),rep('red',sum(datos_sudafrica$chd==1)))
+
+pairs(datos_sudafrica, bg = color, pch = 22)
+```
+>>>>>>> c65b36857f91580e15dc2d8e39c609839190b587
