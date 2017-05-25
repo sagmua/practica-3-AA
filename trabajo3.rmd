@@ -245,16 +245,16 @@ eout_m8sud
 
 El error no es malo pero sigue siendo un peor modelo que el mejor que hemos generado ahora mismo. Hemos comprobado también que es contraproducente realizar transformaciones con logaritmos y raíces debido a la cantidad de datos negativos que tiene la base de datos una vez normalizada. 
 
-En resumen, tras realizar distintas combinaciones de atributos y tratar de predecir con ellos, utilizando alguna transformación no lineal, experimentalmente hemos reducido el error fuera de la muestra a un 0.239. Este error ha venido en un modelo con transformación cuadrática sobre el atributo 'age' (el que mejor representa la muestra como hemos visto en regSubsets) y los 4 siguientes mejores atributos.
+En resumen, tras realizar distintas combinaciones de atributos y tratar de predecir con ellos, utilizando alguna transformación no lineal, experimentalmente hemos reducido el error fuera de la muestra a un 0.239. Este error se ha obtenido con un modelo con transformación cuadrática sobre el atributo 'age' (el que mejor representa la muestra como hemos visto en regSubsets) y utilizando los 4 siguientes mejores atributos.
 
 ###Regularización
 Procedamos ahora  a realiar una regularización empleando Weight-decay mediante la función glmnet. Dicha función recibe los siguientes hiperparámetros:
 
 *\textbf{Alpha} = Para aplicar el weight-decay utilizaremos dicho argumento con valor 0.
-*\textbf{lambda} = Parámetro de regularización. (Multiplica la matriz de identidad)
 
-Hace falta tener en cuenta antes la correcta elección del lambda, de forma que escojamos el mejor lambda.
-En lugar de escoger un lambda de forma arbitraria, sería mejor emplear validación cruzada
+*\textbf{Lambda} = Parámetro de regularización. (Multiplica la matriz de identidad)
+
+Hace falta tener en cuenta antes la correcta elección del lambda, de forma que escojamos el que mejores resultados nos pueda arrojar. En lugar de seleccionarlo de forma arbitraria, será mejor emplear validación cruzada:
 
 ```{r}
 etiquetas = sudafrica_train[,which(names(sudafrica_train) == "chd")]
@@ -264,20 +264,20 @@ crossvalidation =cv.glmnet(tr,etiquetas,alpha=0)
 print(crossvalidation$lambda.min)
 
 ```
-Una vez obtenida la lambda que proporciona un menor $E_{out}$, procedemos a generar un modelo de regularización, en primer lugar empleando el valor de lambda generado por validación cruzada, y en segundo lugar empleando un lambda igual a cero, de forma que no apliquemos regularización.
+Una vez obtenido el lambda que proporciona un menor $E_{out}$, procedemos a generar un modelo de regularización, en primer lugar empleando el valor de lambda generado por validación cruzada, y en segundo lugar empleando un lambda igual a cero, de forma que no apliquemos regularización. El objetivo será comprobar si los parámetros obtenidos son significativamente diferentes como para que merezca la pena realizar regularización en nuestros modelos.
 
 ```{r}
 modelo_reg = glmnet(tr,etiquetas,alpha=0,lambda=crossvalidation$lambda.min)
 print(modelo_reg)
 ```
-Como podemos ver, aplicando regularización con el lambda obtenido tras la validación cruzada obtenemos una varianza del 0.23. Probemos ahora no aplizando regularización, empleando un hiperparámetro lambda de 0 y comprobemos su varianza:
+Aplicando regularización con el lambda obtenido tras la validación cruzada obtenemos una varianza del 0.237. Probemos ahora no aplizando regularización, empleando un hiperparámetro lambda de 0, y comprobemos su varianza:
 
 ```{r}
 modelo_reg = glmnet(tr,etiquetas,alpha=0,lambda=0)
 print(modelo_reg)
 ```
 
-Como podemos comprobar, las desviaciones obtenidas empleando o no regularización mediante weight-decay son similares, por tanto, comcluimos en que emplear regularización no merece la pena.
+Como podemos comprobar, las desviaciones obtenidas empleando o no regularización mediante weight-decay son similares (0.237 frente a 0.241), por tanto, comcluimos en que emplear regularización no merece la pena.
 
 ##Regresión: "LA Ozone"
 En este caso, el problema de regresión a abortar se basa en los registros de concentración de ozono en la atmósfera de Los Angeles. 
