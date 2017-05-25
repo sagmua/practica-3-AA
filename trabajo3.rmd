@@ -60,7 +60,7 @@ datos_sudafrica = data.frame(famhist = (ifelse(datos_sudafrica$famhist=="Absent"
 ###Conjuntos de training y test usados
 A continuación, realizaremos el particionamiento del conjunto de datos. Para el conjunto 'train' de entrenamiento emplearemos el 80% del conjunto total de los datos, de forma que el 20% restante será empleado para test. Hemos decidido utilizar este porcentaje dado que se nos ha explicado que un buen reparto entre train y test oscila entre dos terceras partes para train, o bien hasta un 80%, utilizando el resto para test.\newline
 Procedemos al particionamiento de los datos, así como a su almacenamiento en respectivas variables:
-```{r, include=FALSE}
+```{r}
 #Si queremos obtener un conjunto de indices train para luego ejecutar un modelo lineal sobre el train:
 train = sample (nrow(datos_sudafrica), round(nrow(datos_sudafrica)*0.8))
 #definimos ambos conjuntos en dos data.frame diferentes:
@@ -289,3 +289,22 @@ Apartir de dichos datos, buscamos predecir
 These data record the level of atmospheric ozone concentration from
 eight daily meteorological measurements made in the Los Angeles basin
 in 1976.
+
+```{r}
+datos_ozone = read.csv("./datos/LAozone.data")
+head(datos_ozone)
+```
+
+```{r}
+#Si queremos obtener un conjunto de indices train para luego ejecutar un modelo lineal sobre el train:
+train = sample (nrow(datos_ozone), round(nrow(datos_ozone)*0.8))
+#definimos ambos conjuntos en dos data.frame diferentes:
+ozone_train = datos_ozone[train,]
+ozone_test = datos_ozone[-train,]
+```
+
+```{r}
+color = c(rep('green',sum(datos_sudafrica$chd ==0)),rep('red',sum(datos_sudafrica$chd==1)))
+
+pairs(datos_sudafrica, bg = color, pch = 22)
+```
