@@ -296,6 +296,10 @@ head(datos_ozone)
 ```
 
 ```{r}
+datos_ozone = datos_ozone[,-which(names(datos_ozone) == "doy")]
+```
+
+```{r}
 #Si queremos obtener un conjunto de indices train para luego ejecutar un modelo lineal sobre el train:
 train = sample (nrow(datos_ozone), round(nrow(datos_ozone)*0.8))
 #definimos ambos conjuntos en dos data.frame diferentes:
@@ -304,7 +308,5 @@ ozone_test = datos_ozone[-train,]
 ```
 
 ```{r}
-color = c(rep('green',sum(datos_sudafrica$chd ==0)),rep('red',sum(datos_sudafrica$chd==1)))
-
-pairs(datos_sudafrica, bg = color, pch = 22)
+pairs(datos_ozone, pch = 22)
 ```
