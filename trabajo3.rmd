@@ -318,7 +318,7 @@ nearZeroVar(ozoneTrans$rotation)
 ```{r}
 ozoneTrans = preProcess(ozone_train[,-which(names(datos_ozone) == "ozone")], method = c("BoxCox", "center", "scale"),thresh = 0.9)
 ozone_train[,-which(names(ozone_train) == "ozone")] =predict(ozoneTrans,ozone_train[,-which(names(ozone_train) == "ozone")])
-ozone_test[,-which(names(ozone_Test) == "ozone")] =predict(ozoneTrans,ozone_test[,-which(names(ozone_test) == "ozone")])
+ozone_test[,-which(names(ozone_test) == "ozone")] =predict(ozoneTrans,ozone_test[,-which(names(ozone_test) == "ozone")])
 ```
 
 ```{r}
