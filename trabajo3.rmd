@@ -286,6 +286,20 @@ Como conclusión final, un modelo que utilice suficiente número de atributos pa
 En este caso, el problema de regresión a abortar se basa en los registros de concentración de ozono en la atmósfera de Los Angeles. 
 
 A partir de dichos datos, buscamos predecir la cota máxima por hora de la concentración de ozono de la ciudad de Upland, California.
+
+Los atributos pertenecientes al conjunto de datos son los siguientes:
+* \textbf{vh}: Indica la presión atmosférica medida en la base aérea de los Angeles.
+* \textbf{wind}: Velocidad el viento en mph.
+* \textbf{humidity}: Representa la humedad en el aire.
+* \textbf{temp}: La temperatura que hay cuando se realiza la medición.
+* \textbf{ibh}: Altura apartir de la cuál la presión atmosférica cambia.
+* \textbf{dpg}: Nos indica el gradiante de la presión atmosférica actual.
+* \textbf{ibt}: Altura apartir de la cuál la temperatura atmosférica cambia.
+* \textbf{vis}: Indica el nivel de visibilidad en ese día.
+* \textbf{doy}: Nos indica el día en el que se realizó las mediciones anteriormente mencionadas. Básicamente, este campo actua como clave primaria para cada medición. 
+
+
+
 Procedamos a realizar la lectura de los datos obtenidos:
 
 ```{r}
