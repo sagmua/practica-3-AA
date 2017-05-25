@@ -348,20 +348,26 @@ ozoneTrans$rotation
 ```
 Como podemos observar en la tabla, se han reducido los atributos a 5 atributos (combinaciones lineales de los 8 anteriores).
 Pero si observamos las varianzas de cada atributo en la tabla respecto al resto de atributos, vemos que no existe ningun atributo cuyas varianzas sean cercanas todas a 0. Aún así, para asegurarnos lo comprobamos mediante la siguiente función:
+
 ```{r}
 nearZeroVar(ozoneTrans$rotation)
 ```
-
+Para aplicar las transformaciones, emplearemos la función preProcess sobre nuestro conjunto train, tal y como hemos hecho en el problema de clasificación, de forma que realizando un predict sobre el objeto transformación obtenido, obtengamos el conjunto de datos train preprocesado. A continuación, realizaremos las mismas transformaciones sobre el conjunto de test, utilizando el mismo objeto transformación:
 ```{r}
 ozoneTrans = preProcess(ozone_train[,-which(names(datos_ozone) == "ozone")], method = c("BoxCox", "center", "scale"),thresh = 0.9)
 ozone_train[,-which(names(ozone_train) == "ozone")] =predict(ozoneTrans,ozone_train[,-which(names(ozone_train) == "ozone")])
 ozone_test[,-which(names(ozone_test) == "ozone")] =predict(ozoneTrans,ozone_test[,-which(names(ozone_test) == "ozone")])
 ```
+###Estimación de parámetros
+Antes de realizar un modelo, veamos cuáles son las características más representativas (las que ofrecen varianza mayor con respecto al resto de datos), de forma que no empecemos a realizar modelos a ciegas, sino fijándonos en la calidad de sus atributos.\newline
 
+Para ello emplearemos la función regsubsets. Esta función realiza una búsqueda exhaustiva (empleando Branch&Bound) de las mejores agrupaciones de atributos en nuestro conjunto de entrenamiento para predecir en una regresión lineal:
 ```{r}
 regsub_ozone =regsubsets(datos_ozone[,-which(names(datos_ozone) == "ozone")], datos_ozone[,which(names(datos_ozone) == "ozone")])
 
 summary(regsub_ozone)
 ```
 
+En la gráfica aportada por la función, interpretamos como atributos más representativos aquellos cuyas columnas tienen más estrellas. Nuestro criterio a seguir a la hora de generar modelos lineales será, por tanto, tratar de predecir utilizando agrupaciones de atributos considerados representativos, comenzando por el mejor y de forma descendente. Para mostrar un ejemplo que explique la gráfica, los mejores atributos serían 'age' y 'famhist', y los peores 'adiposity' y 'alcohol'.\newline
 
+Ahora que sabemos cuáles son las características más recomendables para realizar modelos, vamos a construir una serie de ellos con algunas de estas características y validaremos con el conjunto de test para comprobar los errores que reflejan.
