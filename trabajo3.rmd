@@ -262,7 +262,6 @@ tr = sudafrica_train[,-which(names(sudafrica_train) == "chd")]
 tr = as.matrix(tr)
 crossvalidation =cv.glmnet(tr,etiquetas,alpha=0)
 print(crossvalidation$lambda.min)
-
 ```
 Una vez obtenido el lambda que proporciona un menor $E_{out}$, procedemos a generar un modelo de regularización, en primer lugar empleando el valor de lambda generado por validación cruzada, y en segundo lugar empleando un lambda igual a cero, de forma que no apliquemos regularización. El objetivo será comprobar si los parámetros obtenidos son significativamente diferentes como para que merezca la pena realizar regularización en nuestros modelos.
 
@@ -270,7 +269,7 @@ Una vez obtenido el lambda que proporciona un menor $E_{out}$, procedemos a gene
 modelo_reg = glmnet(tr,etiquetas,alpha=0,lambda=crossvalidation$lambda.min)
 print(modelo_reg)
 ```
-Aplicando regularización con el lambda obtenido tras la validación cruzada obtenemos una varianza del 0.237. Probemos ahora no aplizando regularización, empleando un hiperparámetro lambda de 0, y comprobemos su varianza:
+Aplicando regularización con el lambda obtenido tras la validación cruzada obtenemos una desviación del 0.237. Probemos ahora no aplizando regularización, empleando un hiperparámetro lambda de 0, y comprobemos su desviación:
 
 ```{r}
 modelo_reg = glmnet(tr,etiquetas,alpha=0,lambda=0)
