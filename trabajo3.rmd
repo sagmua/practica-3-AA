@@ -90,7 +90,7 @@ Además, para no arriesgar mucho (puesto que PCA trabaja "a ciegas") representar
 
 ```{r}
 sudafricaTrans = preProcess(datos_sudafrica, method = c("BoxCox", "center", "scale", "pca"),thresh = 0.9)
-summary(sudafricaTrans$rotation)
+sudafricaTrans$rotation
 ```
 Como podemos observar en la tabla, se han reducido los atributos a 8 atributos (combinaciones lineales de los 10 anteriores).
 Pero si observamos las varianzas de cada atributo en la tabla respecto al resto de atributos, vemos que no existe ningun atributo cuyas varianzas sean cercanas todas a 0. Aún así, para asegurarnos lo comprobamos mediante la siguiente función:
@@ -108,9 +108,9 @@ Para conlcuir el preprocesamiento de los datos, realizaremos las siguientes oper
 Para aplicar las transformaciones, emplearemos la función preProcess sobre nuestro conjunto train, de forma que realizando un predict sobre el objeto transformación obtenido, obtengamos el conjunto de datos train preprocesado. A continuación, realizaremos las mismas transformaciones sobre el conjunto de test, utilizando el mismo objeto transformación:
 
 ```{r}
-sudafricaTrans = preProcess(sudafrica_train[,-ncol(sudafrica_train)], method = c("BoxCox", "center", "scale"),thresh = 0.9)
-sudafrica_train[,-ncol(sudafrica_train)] =predict(sudafricaTrans,sudafrica_train[,-ncol(sudafrica_train)])
-sudafrica_test[,-ncol(sudafrica_test)] =predict(sudafricaTrans,sudafrica_test[,-ncol(sudafrica_test)])
+sudafricaTrans = preProcess(sudafrica_train[,-which(names(sudafrica_train) == "chd")], method = c("BoxCox", "center", "scale"),thresh = 0.9)
+sudafrica_train[,-which(names(sudafrica_train) == "chd")] =predict(sudafricaTrans,sudafrica_train[,-which(names(sudafrica_train) == "chd")])
+sudafrica_test[,-which(names(sudafrica_test) == "chd")] =predict(sudafricaTrans,sudafrica_test[,-which(names(sudafrica_test) == "chd")])
 ```
 
 
@@ -120,7 +120,7 @@ Antes de realizar un modelo, veamos cuáles son las características más repres
 Para ello emplearemos la función regsubsets. Esta función realiza una búsqueda exhaustiva (empleando Branch&Bound) de las mejores agrupaciones de atributos en nuestro conjunto de entrenamiento para predecir en una regresión lineal:
 
 ```{r}
-regsub_sudafrica =regsubsets(datos_sudafrica[,-ncol(datos_sudafrica)], datos_sudafrica[,ncol(datos_sudafrica)])
+regsub_sudafrica =regsubsets(datos_sudafrica[,-which(names(datos_sudafrica) == "chd")], datos_sudafrica[,which(names(datos_sudafrica) == "chd")])
 
 summary(regsub_sudafrica)
 ```
@@ -326,3 +326,28 @@ Veamos entonces si es aconsejable realizar una reducción de la dimensionalidad 
 PCA calcula la varianza de cada atributo respecto a los demás, de forma que aquellos atributos que posean menor varianza (cercana a cero) con respecto a los demás serán considerados como redundantes.\newline
 
 Además, para no arriesgar mucho (puesto que PCA trabaja "a ciegas") representaremos sólo aquellos componentes que expliquen hasta el 90% de la variabilidad de los datos (es necesario que los datos estén escalados y centrados para aplicar PCA):
+
+
+```{r}
+ozoneTrans = preProcess(datos_ozone, method = c("BoxCox", "center", "scale", "pca"),thresh = 0.9)
+ozoneTrans$rotation
+```
+Como podemos observar en la tabla, se han reducido los atributos a 5 atributos (combinaciones lineales de los 8 anteriores).
+Pero si observamos las varianzas de cada atributo en la tabla respecto al resto de atributos, vemos que no existe ningun atributo cuyas varianzas sean cercanas todas a 0. Aún así, para asegurarnos lo comprobamos mediante la siguiente función:
+```{r}
+nearZeroVar(ozoneTrans$rotation)
+```
+
+```{r}
+ozoneTrans = preProcess(ozone_train[,-which(names(datos_ozone) == "ozone")], method = c("BoxCox", "center", "scale"),thresh = 0.9)
+ozone_train[,-which(names(ozone_train) == "ozone")] =predict(ozoneTrans,ozone_train[,-which(names(ozone_train) == "ozone")])
+ozone_test[,-which(names(ozone_test) == "ozone")] =predict(ozoneTrans,ozone_test[,-which(names(ozone_test) == "ozone")])
+```
+
+```{r}
+regsub_ozone =regsubsets(datos_ozone[,-which(names(datos_ozone) == "ozone")], datos_ozone[,which(names(datos_ozone) == "ozone")])
+
+summary(regsub_ozone)
+```
+
+
