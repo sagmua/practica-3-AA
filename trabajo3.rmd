@@ -285,10 +285,8 @@ Como conclusión final, un modelo que utilice suficiente número de atributos pa
 ##Regresión: "LA Ozone"
 En este caso, el problema de regresión a abortar se basa en los registros de concentración de ozono en la atmósfera de Los Angeles. 
 
-Apartir de dichos datos, buscamos predecir
-These data record the level of atmospheric ozone concentration from
-eight daily meteorological measurements made in the Los Angeles basin
-in 1976.
+A partir de dichos datos, buscamos predecir la cota máxima por hora de la concentración de ozono de la ciudad de Upland, California.
+Procedamos a realizar la lectura de los datos obtenidos:
 
 ```{r}
 datos_ozone = read.csv("./datos/LAozone.data")
