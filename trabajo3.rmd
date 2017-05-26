@@ -124,9 +124,10 @@ regsub_sudafrica =regsubsets(datos_sudafrica[,-which(names(datos_sudafrica) == "
 
 summary(regsub_sudafrica)
 ```
-En la gráfica aportada por la función, interpretamos como atributos más representativos aquellos cuyas columnas tienen más estrellas. Nuestro criterio a seguir a la hora de generar modelos lineales será, por tanto, tratar de predecir utilizando agrupaciones de atributos considerados representativos, comenzando por el mejor y de forma descendente. Para mostrar un ejemplo que explique la gráfica, los mejores atributos serían 'age' y 'famhist', y los peores 'adiposity' y 'alcohol'.\newline
 
-Ahora que sabemos cuáles son las características más recomendables para realizar modelos, vamos a construir una serie de ellos con algunas de estas características y validaremos con el conjunto de test para comprobar los errores que reflejan.
+En la gráfica aportada por la función, interpretamos como atributos más representativos aquellos cuyas columnas tienen más estrellas. Nuestro criterio a seguir a la hora de generar modelos lineales será, no obstante, tratar de predecir utilizando las agrupaciones de atributos que la función considera representativos, Es decir, si queremos realizar un modelo con n características, utilizaremos aquellas que estén marcadas con una estrella para la fila n. Para mostrar un ejemplo que explique la gráfica, si queremos utilizar 3 atributos para el modelo, escogeremos 'age', 'famhist' y 'tobacco'.
+
+Ahora que sabemos cómo elegir las características más recomendables para realizar modelos, podremos construir una serie de ellos con algunas de estas características y validar con el conjunto de test para comprobar los errores que reflejan.
 
 
 ###Regularización
@@ -323,16 +324,16 @@ Como conclusión final, un modelo que utilice suficiente número de atributos pa
 En este caso, el problema a abordar se basa en los registros de concentración de ozono en la atmósfera de Los Angeles. Se trata de un problema de regresión donde buscamos predecir la cota máxima por hora de la concentración de ozono de la ciudad de Upland, California.
 
 Los atributos pertenecientes al conjunto de datos son los siguientes:
+
 * \textbf{vh}: Indica la presión atmosférica medida en la base aérea de los Angeles.
 * \textbf{wind}: Velocidad el viento en mph.
 * \textbf{humidity}: Representa la humedad en el aire.
 * \textbf{temp}: La temperatura que hay cuando se realiza la medición.
-* \textbf{ibh}: Altura apartir de la cuál la presión atmosférica cambia.
+* \textbf{ibh}: Altura a partir de la cuál la presión atmosférica cambia.
 * \textbf{dpg}: Nos indica el gradiante de la presión atmosférica actual.
-* \textbf{ibt}: Altura apartir de la cuál la temperatura atmosférica cambia.
-* \textbf{vis}: Indica el nivel de visibilidad en ese día.
-* \textbf{doy}: Nos indica el día en el que se realizó las mediciones anteriormente mencionadas. Básicamente, este campo actua como clave primaria para cada medición.
-
+* \textbf{ibt}: Altura a partir de la cuál la temperatura atmosférica cambia.
+* \textbf{vis}: Nivel de visibilidad.
+* \textbf{doy}: Día en el que se realizaron las mediciones anteriormente mencionadas.
 
 
 Procedamos a realizar la lectura de los datos obtenidos:
@@ -341,15 +342,18 @@ Procedamos a realizar la lectura de los datos obtenidos:
 datos_ozone = read.csv("./datos/LAozone.data")
 head(datos_ozone)
 ```
+
 Si analizamos los datos obtenidos, podemos observar que existe un atributo, 'doy', que actúa como clave primaria, es decir, como identificador, indicándonos el dia en el que se realizó la medición así que dicho atributo nos es inútil para el aprendizaje de un modelo lineal, y por tanto lo suprimimos:
+
 ```{r}
 datos_ozone = datos_ozone[,-which(names(datos_ozone) == "doy")]
 ```
 
 
 ###Conjuntos de training y test usados
-A continuación, realizaremos el particionamiento del conjunto de datos. Para el conjunto 'train' de entrenamiento emplearemos el 80% del conjunto total de los datos, de forma que el 30% restante será empleado para test. Hemos decidido utilizar este porcentaje dado que se nos ha explicado que un buen reparto entre train y test oscila entre dos terceras partes para train, o bien hasta un 70%, utilizando el resto para test.\newline
+A continuación, realizaremos el particionamiento del conjunto de datos. Para el conjunto 'train' de entrenamiento emplearemos el 70% del conjunto total de los datos, de forma que el 30% restante será empleado para test. Hemos decidido utilizar este porcentaje dado que se nos ha explicado que un buen reparto entre train y test oscila entre dos terceras partes para train, o bien hasta un 80%, utilizando el resto para test. Como en el problema anterior empleamos 80-20, en este probaremos con 70-30.\newline
 Procedemos al particionamiento de los datos, así como a su almacenamiento en respectivas variables:
+
 ```{r}
 #Si queremos obtener un conjunto de indices train para luego ejecutar un modelo lineal sobre el train:
 train = sample (nrow(datos_ozone), round(nrow(datos_ozone)*0.7))
@@ -364,9 +368,8 @@ Antes de entrar en el preprocesamiento, consideramos interesante realizar una vi
 ```{r}
 pairs(datos_ozone, pch = 22)
 ```
-\newline
-Al representar la matriz de gráficas podemos hacernos una primera idea de la dispersión de los datos. Como podemos observar esta dispersión es menor que en el ejercicio de clasificación, a priori los atributos que consideramos que pueden estar sustancialmente relacionados entre sí son 'temp' y 'ibt', ''vh  y 'temp', 'vh' y 'ibt'.
 
+Al representar la matriz de gráficas podemos hacernos una primera idea de la dispersión de los datos. Como podemos observar esta dispersión es menor que en el ejercicio de clasificación, a priori los atributos que consideramos que pueden estar sustancialmente relacionados entre sí son 'temp' y 'ibt', 'vh'  y 'temp', 'vh' y 'ibt'.
 
 En este caso, estamos trabajando sobre un conjunto de datos que posee 8 atributos, por para realizar una reducción de datos debemos de estar seguros que se trata de un atributo redundante para el aprendizaje de nuestro modelo lineal.
 
@@ -381,31 +384,35 @@ Además, para no arriesgar mucho (puesto que PCA trabaja "a ciegas") representar
 ozoneTrans = preProcess(datos_ozone, method = c("BoxCox", "center", "scale", "pca"),thresh = 0.9)
 ozoneTrans$rotation
 ```
-Como podemos observar en la tabla, se han reducido los atributos a 5 atributos (combinaciones lineales de los 8 anteriores).
-Pero si observamos las varianzas de cada atributo en la tabla respecto al resto de atributos, vemos que no existe ningun atributo cuyas varianzas sean cercanas todas a 0. Aún así, para asegurarnos lo comprobamos mediante la siguiente función:
+
+Como podemos observar en la tabla, se han reducido los atributos a 5 (combinaciones lineales de los 8 anteriores). Pero si observamos las varianzas de cada atributo en la tabla respecto al resto de atributos, vemos que no existe ningun atributo cuyas varianzas sean cercanas todas a 0. Aún así, para asegurarnos lo comprobamos mediante la siguiente función:
 
 ```{r}
 nearZeroVar(ozoneTrans$rotation)
 ```
+
 Para aplicar las transformaciones, emplearemos la función preProcess sobre nuestro conjunto train, tal y como hemos hecho en el problema de clasificación, de forma que realizando un predict sobre el objeto transformación obtenido, obtengamos el conjunto de datos train preprocesado. A continuación, realizaremos las mismas transformaciones sobre el conjunto de test, utilizando el mismo objeto transformación:
+
 ```{r}
-ozoneTrans = preProcess(ozone_train[,-which(names(datos_ozone) == "ozone")], method = c("BoxCox", "center", "scale"),thresh = 0.8)
+ozoneTrans = preProcess(ozone_train[,-which(names(datos_ozone) == "ozone")], method = c("BoxCox", "center", "scale"),thresh = 0.9)
 ozone_train[,-which(names(ozone_train) == "ozone")] =predict(ozoneTrans,ozone_train[,-which(names(ozone_train) == "ozone")])
 ozone_test[,-which(names(ozone_test) == "ozone")] =predict(ozoneTrans,ozone_test[,-which(names(ozone_test) == "ozone")])
 ```
+
 ###Estimación de parámetros
 Antes de realizar un modelo, veamos cuáles son las características más representativas (las que ofrecen varianza mayor con respecto al resto de datos), de forma que no empecemos a realizar modelos a ciegas, sino fijándonos en la calidad de sus atributos.\newline
 
 Para ello emplearemos la función regsubsets. Esta función realiza una búsqueda exhaustiva (empleando Branch&Bound) de las mejores agrupaciones de atributos en nuestro conjunto de entrenamiento para predecir en una regresión lineal:
+
 ```{r}
 regsub_ozone =regsubsets(datos_ozone[,-which(names(datos_ozone) == "ozone")], datos_ozone[,which(names(datos_ozone) == "ozone")])
 
 summary(regsub_ozone)
 ```
 
-En la gráfica aportada por la función, interpretamos como atributos más representativos aquellos cuyas columnas tienen más estrellas. Nuestro criterio a seguir a la hora de generar modelos lineales será, por tanto, tratar de predecir utilizando agrupaciones de atributos considerados representativos, comenzando por el mejor y de forma descendente. Para mostrar un ejemplo que explique la gráfica, los mejores atributos serían 'temp' y 'ibt', ''vh  y 'temp', 'vh' y 'ibt'.\newline
+En la gráfica aportada por la función, interpretamos como atributos más representativos aquellos cuyas columnas tienen más estrellas. Nuestro criterio a seguir a la hora de generar modelos lineales será, no obstante, tratar de predecir utilizando las agrupaciones de atributos que la función considera representativos, Es decir, si queremos realizar un modelo con n características, utilizaremos aquellas que estén marcadas con una estrella para la fila n. Para mostrar un ejemplo que explique la gráfica, si queremos utilizar 3 atributos para el modelo, escogeremos 'humidity', 'temp' e 'ibh'.
 
-Ahora que sabemos cuáles son las características más recomendables para realizar modelos, vamos a construir una serie de ellos con algunas de estas características y validaremos con el conjunto de test para comprobar los errores que reflejan.
+Ahora que sabemos cuáles son las características más recomendables para realizar modelos, podremos construir una serie de ellos con algunas de estas características y validar con el conjunto de test para comprobar los errores que reflejan.
 
 
 ###Regularización
@@ -432,26 +439,22 @@ modelo_reg = glmnet(tr,variable_respuesta,alpha=0,lambda=crossvalidation$lambda.
 print(modelo_reg)
 ```
 
-Aplicando regularización con el lambda obtenido tras la validación cruzada obtenemos una desviación del 0.6934. Probemos ahora no aplizando regularización, empleando un hiperparámetro lambda de 0, y comprobemos su desviación:
+Aplicando regularización con el lambda obtenido tras la validación cruzada obtenemos una desviación del 0.701. Probemos ahora no aplizando regularización, empleando un hiperparámetro lambda de 0, y comprobemos su desviación:
 
 ```{r}
 modelo_reg = glmnet(tr,variable_respuesta,alpha=0,lambda=0)
 print(modelo_reg)
 ```
 
-Como podemos comprobar, las desviaciones obtenidas empleando o no regularización mediante weight-decay son similares (0.6934 frente a 0.6982), por tanto, comcluimos en que emplear regularización no merece la pena.
+Como podemos comprobar, las desviaciones obtenidas empleando o no regularización mediante weight-decay son similares (0.701 frente a 0.707), por tanto, comcluimos en que emplear regularización no merece la pena.
+
 ###Definición de modelos
-Para la realización de los modelos hemos pensado en emplear regresión logística mediante la función 'glm'; pero si empleamos regresión logística obtendremos un conjunto de probabilidades que predigan los valores. Para ello, como precondición sería necesario normalizar los valores de la variable respuesta de forma que se encontraran en el intervalo [0,1].
+
+Para la realización de los modelos planteamos emplear regresión logística mediante la función 'glm'; pero si empleamos regresión logística obtendremos un conjunto de probabilidades que predigan los valores. Para ello, como precondición sería necesario normalizar los valores de la variable respuesta de forma que se encontraran en el intervalo [0,1].
 
 Entonces procederemos a generar modelos mediante regresión lineal, así obtendremos un valor dependiendo de la distancia de los atributos a la recta generada.
 
-Procedamos comenzando por un modelo de un único atributo, temp.
-Antes definimos una función para el cálculo del error cuadrático:
-
-Pero antes de todo, definamos una función para el cálculo del error de nuestros modelos de regresión lineal que generemos.
-Para ello realizamos un cálculo de la media de errores normalizados en un intervalo.
-
-El cálculo se realiza entre el cociente de la resta de las variables respuesta menos las predichas, y la diferencia entre el valor máximo y mínimo de las variables respuesta:
+Antes definimos una función para el cálculo del error cuadrático. Para ello realizamos un cálculo de la media de errores normalizados en un intervalo. Se realiza el cociente entre la resta de las variables respuesta reales menos las predichas, y la diferencia entre el valor máximo y mínimo de las variables respuesta:
 
 ```{r calculoErrorMedioIntervalo}
 
@@ -461,26 +464,29 @@ calculoErrorMedioIntervalo  = function (modelo, test, variable_respuesta){
   etest = mean(abs(prob_test - test[,which(names(test) == variable_respuesta)])/(max(ozone_test$ozone)-min(ozone_test$ozone)))
 
 }
-
-
 ```
 
 Comenzamos planteando los modelos con uno sencillo, tratando de predecir la variable respuesta en función únicamente de aquella que recomienda regsubsets, 'temp':
 
 ```{r}
 m1_ozone = lm(ozone ~ temp, data = ozone_train)
-
-etest_m1ozone = calculoErrorMedioIntervalo(m1_ozone, ozone_test, "ozone")
-etest_m1ozone
 ```
-Representemos el modelo generado en función del atributo 'temp':
+
+En regresión puede ser interesante visualizar la variable respuesta contra la que se está utilizando para predecir, y ver la función que nos pinta el modelo. Representemos por tanto el modelo generado en función del atributo 'temp':
+
 ```{r}
 plot(ozone_test$temp, ozone_test$ozone)
 abline(m1_ozone$coefficients)
 ```
-Como podemos observar, se ajusta un modelo de regresión lineal en función de las variables respuestas, pero veamos ahora el error obtenido.
 
-Obtenemos un error de 0.115, para una primera aproximación no está nada mal. No obstante, vamos a seguir haciendo modelos utilizando las agrupaciones de atributos más representativas. Añadimos al siguiente modelo el atributo 'ibh':
+Como podemos observar, se ajusta un modelo de regresión lineal que parece ciertamente representativo de los datos de test, pero veamos ahora el error obtenido  para asegurar que se trata de un buen modelo:
+
+```{r}
+etest_m1ozone = calculoErrorMedioIntervalo(m1_ozone, ozone_test, "ozone")
+etest_m1ozone
+```
+
+Obtenemos un error de 0.109, para una primera aproximación no está nada mal. No obstante, vamos a seguir haciendo modelos utilizando las agrupaciones de atributos más representativas. Añadimos al siguiente modelo el atributo 'ibh':
 
 ```{r}
 m2_ozone = lm(ozone ~ temp + ibh, data = ozone_train)
@@ -489,7 +495,7 @@ etest_m2ozone = calculoErrorMedioIntervalo(m2_ozone, ozone_test, "ozone")
 etest_m2ozone
 ```
 
-El error desciende hasta 0.109 cuando utilizamos dos características para predecir. Continuemos el proceso con las tres características más representativas, añadiendo 'humidity':
+El error desciende hasta 0.102 cuando utilizamos dos características para predecir. Continuemos el proceso con las tres características más representativas, añadiendo 'humidity':
 
 ```{r}
 m3_ozone = lm(ozone ~ temp + ibh + humidity, data = ozone_train)
@@ -498,7 +504,7 @@ etest_m3ozone = calculoErrorMedioIntervalo(m3_ozone, ozone_test, "ozone")
 etest_m3ozone
 ```
 
-Mejoramos el error, llegando hasta 0.1. Añadimos un nuevo atributo, llegando a una combinación lineal de 4, con 'vis' y evaluamos de nuevo el modelo que obtengamos:
+Mejoramos el error, llegando hasta 0.096. Añadimos un nuevo atributo, llegando a una combinación lineal de 4, con 'vis' y evaluamos de nuevo el modelo que obtengamos:
 
 ```{r}
 m4_ozone = lm(ozone ~ temp + ibh + humidity + vis , data = ozone_train)
@@ -507,50 +513,51 @@ etest_m4ozone = calculoErrorMedioIntervalo(m4_ozone, ozone_test, "ozone")
 etest_m4ozone
 ```
 
-En este punto llegamos al sobreajuste, ya que encontramos un error mayor que el del modelo anterior, 0.103. Llegados a este punto, en lugar de añadir más atributos a nuestro modelo de regresión de forma lineal, vamos a realizar transformaciones no lineales sobre el conjunto de atributos del mejor modelo obtenido hasta el momento:
+En este punto la mejora es muy pequeña, el error apenas varía. Por este motivo vamos a sustituir la última característica añadida por la que regsubsets nos recomienda añadir en el caso de calcular un modelo con 5 características, 'ibt':
 
 ```{r}
-m5_ozone = lm(ozone ~ temp * ibh * humidity, data = ozone_train)
+m5_ozone = lm(ozone ~ temp + ibh + humidity + ibt, data = ozone_train)
 
 etest_m5ozone = calculoErrorMedioIntervalo(m5_ozone, ozone_test, "ozone")
 etest_m5ozone
 ```
 
-Con la transformación no lineal que hemos realizado (multiplicar las características entre sí) el error desciende hasta 0.828. La mejora es significativa, pero vamos a probar una serie de combinaciones no lineales por si alguna ofrece un mejor resultado. Comenzamos por añadir una nueva característica multiplicada, 'ibt':
+Añadiendo este atributo sí hemos conseguido una mejora más significativa, 0.095. Por hacernos una idea, generemos también el modelo que contiene las 5 características juntas:
 
 ```{r}
-m6_ozone = lm(ozone ~ temp * ibh * humidity * ibt , data = ozone_train)
+m6_ozone = lm(ozone ~ temp + ibh + humidity + vis + ibt, data = ozone_train)
 
 etest_m6ozone = calculoErrorMedioIntervalo(m6_ozone, ozone_test, "ozone")
 etest_m6ozone
 ```
 
-El error es muy similar pero ligeramente superior. Por último, comprobaremos cómo se ajusta un modelo con una característica más, 'vis':
+En este punto obtenemos un error ligeramente mayor que en el modelo anterior, por lo que en adelante tomamos la decisión de que en lugar de añadir más atributos a nuestro modelo de regresión de forma lineal, vamos a realizar transformaciones no lineales sobre el conjunto de atributos del mejor modelo obtenido hasta el momento:
 
 ```{r}
-m7_ozone = lm(ozone ~ temp * ibh * humidity * ibt * vis, data = ozone_train)
+m7_ozone = lm(ozone ~ temp * ibh * humidity * ibt , data = ozone_train)
 
 etest_m7ozone = calculoErrorMedioIntervalo(m7_ozone, ozone_test, "ozone")
 etest_m7ozone
 ```
 
-Tras evaluar todos los modelos que hemos considerado, el que mejor resultados ha proporcionado para nuestro problema ha sido el que realiza el producto de las características 'temp', 'ibh' y 'humidity' (combinaciones no lineales entre atributos).
+Con este modelo no lineal, utilizando el producto de las características, el error desciende considerablemente, dando lugar a un 0.086.
 
+De nuevo no es productivo aplicar raíces cuadradas ni logaritmos por la cantidad de valores negativos que surjan de la normalización de los datos. Dado que esas cuatro características son aquellas que nos han aportado el mejor modelo lineal, concluimos que utilizarlas como transformación no lineal es el mejor modelo que podemos obtener.
 
 ###Estimacion del error $E_{out}$
-Una vez que hemos hecho una selección de los modelos y hemos dado con uno modelo lineal que proporciona un valor del error inferior al 0.1 (concretamente 0.828), vamos a proceder a realizar una estimación del $E_{out}$ de forma que obtengamos un valor más representativo del error.
+Una vez que hemos comprobado qué modelo nos aporta un mejor resultado, vamos a proceder a realizar una estimación del $E_{out}$ de forma que obtengamos un valor más representativo que un error puntual en un par de conjuntos train-test.
 
-Para ello vamos a repetir la generación de particiones, tanto train como test, con la misma proporción realizada anteriormente, empleando también un 0.7 para train y un 0.3 para test. Repetiremos el proceso 100 veces y obtendremos la media de los $E_{out}$.
+Para ello vamos a realizar un experimento repitiendo el proceso completo, desde la generación de particiones, tanto train como test, con la misma proporción realizada anteriormente (0.7 para train y 0.3 para test), hasta la definición de los modelos y cálculo del $E_{test}$. Repetiremos el proceso 100 veces y obtendremos la media de los $E_{test}$, considerándolo una buena estimación del $E_{out}$ para el modelo.
 
-Definamos una función que realice tanto la generación y el particionado, así como las transformaciones sobre los conjuntos de datos y que devuelva el error generado por el mejor modelo obtenido (m5):
+Definamos una función que realice tanto la generación y el particionado, así como las transformaciones sobre los conjuntos de datos y que devuelva el error generado por el mejor modelo obtenido:
 
 ```{r generaErrorParticionOzone}
 generarErrorParticionOzone = function(datos){
   #Si queremos obtener un conjunto de indices train para luego ejecutar un modelo lineal sobre el train:
-  el_train = sample (nrow(datos), round(nrow(datos)*0.7))
+  train = sample (nrow(datos), round(nrow(datos)*0.7))
   #definimos ambos conjuntos en dos data.frame diferentes:
-  ozone_train = datos_ozone[el_train,]
-  ozone_test = datos_ozone[-el_train,]
+  ozone_train = datos_ozone[train,]
+  ozone_test = datos_ozone[-train,]
 
   #TRANSFORMACIONES:
   ozoneTrans = preProcess(ozone_train[,-which(names(datos_ozone) == "ozone")], method = c("BoxCox", "center", "scale"),thresh = 0.8)
@@ -558,22 +565,21 @@ ozone_train[,-which(names(ozone_train) == "ozone")] =predict(ozoneTrans,ozone_tr
 ozone_test[,-which(names(ozone_test) == "ozone")] =predict(ozoneTrans,ozone_test[,-which(names(ozone_test) == "ozone")])
 
 #EVALUACION DEL MODELO
-m5_ozone = lm(ozone ~ temp * ibh * humidity, data = ozone_train)
+modelo_ozone = lm(ozone ~ temp * ibh * humidity * ibt, data = ozone_train)
 
-etest_m5ozone = calculoErrorMedioIntervalo(m5_ozone, ozone_test, "ozone")
-etest_m5ozone
+etest = calculoErrorMedioIntervalo(modelo_ozone, ozone_test, "ozone")
+etest
 }
 ```
 
 
-Una vez que hemos definido la funcion, realizamos una evaluación del error 1000 veces, de forma que cálculemos como resultado final la media de los errores generados para cada una de las 1000 particiones:
+Una vez que hemos definido la funcion, realizamos una evaluación del error 100 veces, de forma que cálculemos como resultado final la media de los errores generados para cada una de las 100 particiones:
 
 ```{r}
 mean(replicate(100, generarErrorParticionOzone(datos_ozone)))
 ```
-Como podemos ver, obtenemos un $E_{out}$ medio del 0.08869314, bástante bueno. Este error representa mejor el error real obtenido por nuestro modelo de regresión lineal.
 
-
+Como podemos ver, obtenemos un $E_{out}$ medio del 0.084, aún mejor que en el caso particular al que sometimos el modelo al principio. Este error representa de forma mucho más fiable el error real obtenido por nuestro modelo, y le da más validez y consistencia.
 
 ###Conclusión y modelo final seleccionado
 ###########################################################################################
