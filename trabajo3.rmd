@@ -275,19 +275,19 @@ El error no es malo pero sigue siendo un peor modelo que el mejor que hemos gene
 En resumen, tras realizar distintas combinaciones de atributos y tratar de predecir con ellos, utilizando alguna transformación no lineal, experimentalmente hemos reducido el error fuera de la muestra a un 0.239. Este error se ha obtenido con un modelo con transformación cuadrática sobre el atributo 'age' (el que mejor representa la muestra como hemos visto en regSubsets) y utilizando los 4 siguientes mejores atributos.
 
 ###Estimacion del error $E_{out}$
-Una vez que hemos hecho una selección de los modelos y hemos dado con uno modelo lineal que proporciona un valor del error de 0.239, vamos a proceder a realizar una estimación del $E_{out}$ de forma que obtengamos un valor más representativo del error.
+Una vez que hemos comprobado qué modelo nos aporta un mejor resultado, vamos a proceder a realizar una estimación del $E_{out}$ de forma que obtengamos un valor más representativo que un error puntual en un par de conjuntos train-test.
 
-Para ello vamos a repetir la generación de particiones, tanto train como test, con la misma proporción realizada anteriormente, empleando también un 0.8 para train y un 0.2 para test. Repetiremos el proceso 100 veces y obtendremos la media de los $E_{out}$.
+Para ello vamos a realizar un experimento repitiendo el proceso completo, desde la generación de particiones, tanto train como test, con la misma proporción realizada anteriormente (0.8 para train y 0.2 para test), hasta la definición de los modelos y cálculo del $E_{test}$. Repetiremos el proceso 100 veces y obtendremos la media de los $E_{test}$, considerándolo una buena estimación del $E_{out}$ para el modelo.
 
-Definamos una función que realice tanto la generación y el particionado, así como las transformaciones sobre los conjuntos de datos y que devuelva el error generado por el mejor modelo obtenido (m7):
+Definamos una función que realice tanto la generación y el particionado, así como las transformaciones sobre los conjuntos de datos y que devuelva el error generado por el mejor modelo obtenido:
 
 ```{r generaErrorParticionSudafrica}
 generarErrorParticionSudafrica = function(datos){
   #Si queremos obtener un conjunto de indices train para luego ejecutar un modelo lineal sobre el train:
-  el_train = sample (nrow(datos), round(nrow(datos)*0.7))
+  indices_train = sample (nrow(datos), round(nrow(datos)*0.7))
   #definimos ambos conjuntos en dos data.frame diferentes:
-  sudafrica_train = datos[el_train,]
-  sudafrica_test = datos[-el_train,]
+  sudafrica_train = datos[indices_train,]
+  sudafrica_test = datos[-indices_train,]
 
   #TRANSFORMACIONES:
   sudafricaTrans = preProcess(sudafrica_train[,-which(names(datos_sudafrica) == "chd")], method = c("BoxCox", "center", "scale"),thresh = 0.8)
@@ -295,39 +295,32 @@ sudafrica_train[,-which(names(sudafrica_train) == "chd")] =predict(sudafricaTran
 sudafrica_test[,-which(names(sudafrica_test) == "chd")] =predict(sudafricaTrans,sudafrica_test[,-which(names(sudafrica_test) == "chd")])
 
 #EVALUACION DEL MODELO
-m7_sudafrica = lm(chd ~ I(age^2) + famhist + tobacco + ldl + typea, data=sudafrica_train)
+modelo_sudafrica = lm(chd ~ I(age^2) + famhist + tobacco + ldl + typea, data=sudafrica_train)
 
-etest_m5sudafrica = calculoErrorMatrizConfusion(m7_sudafrica, sudafrica_test, "chd", FALSE)
-etest_m5sudafrica
+etest = calculoErrorMatrizConfusion(modelo_sudafrica, sudafrica_test, "chd", FALSE)
+etest
 }
-```
 
-
-Una vez que hemos definido la funcion, realizamos una evaluación del error 1000 veces, de forma que cálculemos como resultado final la media de los errores generados para cada una de las 1000 particiones:
-
-```{r}
 mean(replicate(100, generarErrorParticionSudafrica(datos_sudafrica)))
 ```
-Como podemos ver, obtenemos un $E_{out}$ medio del 0.08869314, bástante bueno. Este error representa mejor el error real obtenido por nuestro modelo de regresión lineal.
 
-
-
+Como podemos ver, obtenemos una estimación del $E_{out}$ de 0.286. Este error representa mejor el error real obtenido por nuestro modelo de regresión lineal, aunque sea peor que el error puntual que teníamos antes. Seguramente esto se deba a que para los conjuntos train y test definidos anteriormente el modelo se ajustaba particularmente bien, mientras que de forma general en el problema ese modelo no llega a ser tan bueno.
 
 
 ###Conclusión y modelo final seleccionado
 
-Tras los diferentes modelos generados, habiendo utilizado distintas combinaciones de atributos, tratando de optimizar con transformaciones no lineales, y habiendo decidido no utilizar regularización, hemos conlcuido que el mejor modelo que hemos podido encontrar ha sido aquel que utiliza la agrupación de los 5 mejores atributos según regsubsets, y con una transformación cuadrática del atributo 'age'.
+Tras los diferentes modelos generados, sin aplicar regularización al considerar que la desviación no varía de forma significativa entre hacerla y no hacerla, habiendo utilizado distintas combinaciones de atributos, tratando de optimizar con transformaciones no lineales, y habiendo decidido no utilizar regularización, hemos conlcuido que el mejor modelo que hemos podido encontrar ha sido aquel que utiliza la agrupación de los 5 mejores atributos según regsubsets, y con una transformación cuadrática del atributo 'age'.
 
-Con este modelo hemos reducido la tasa de error hasta un 23.9%. Si consideramos la distribución de los datos que observamos en la matriz de gráficas al comienzo del problema, y según hemos comprobado de forma experimental, la base de datos no es lineal, y con un modelo lineal no podremos ajustar de mucha mejor forma los datos. A pesar de ello, decidimos empezar por ahí para encontrar qué características son más representativas a la hora de reducir el error. Hemos construido diferentes modelos combinando los atributos que mayor varianza presentan (más representativos) y hemos ido reduciendo el error hasta que se ha empezado a producir sobreajuste. A partir de aquí, añadir más atributos sólo nos continúa ajustando de más la función, provocando que se produzcan muchas curvas en la función que dificulten generalizar los datos del conjunto de test.
+Con este modelo hemos reducido la tasa de error hasta un 23.9% con los conjuntos generados inicialmente. Si consideramos la distribución de los datos que observamos en la matriz de gráficas al comienzo del problema, y según hemos comprobado de forma experimental, la base de datos no es lineal, y con un modelo lineal no podremos ajustar de mucha mejor forma los datos. A pesar de ello, decidimos empezar por ahí para encontrar qué características son más representativas a la hora de reducir el error. Hemos construido diferentes modelos combinando los atributos que mayor varianza presentan (más representativos) y hemos ido reduciendo el error hasta que se ha empezado a producir sobreajuste. A partir de aquí, añadir más atributos sólo nos continúa ajustando de más la función, provocando que se produzcan muchas curvas en la función que dificulten generalizar los datos del conjunto de test.
 
-Llegados a este punto, como no nos conviene añadir más atributos y puesto que nos encontramos frente a un modelo no lineal, consideramos realizar algunas transformaciones no lineales sobre los atributos que ya tenemos, y encontramos el mejor error realizando una transformación cuadrática sobre el atributo 'age'. Optamos por esto dado que contamos con unos datos muy dispersos y difícilmente separables con una función lineal. Probando con nuevas transformaciones no logramos mejor resultado así que nos quedamos con este modelo. Y por último, dado que comprobando los parámetros derivados de la regularización hemos visto que no varían de forma significativa, hemos decidido no realizarla.
+Llegados a este punto, como no nos conviene añadir más atributos y puesto que nos encontramos frente a un modelo no lineal, consideramos realizar algunas transformaciones no lineales sobre los atributos que ya tenemos, y encontramos el mejor error realizando una transformación cuadrática sobre el atributo 'age'. Optamos por esto dado que contamos con unos datos muy dispersos y difícilmente separables con una función lineal. Probando con nuevas transformaciones no logramos mejor resultado así que nos quedamos con este modelo.
+
+A pesar de todo, el error que da en estos conjuntos train-test no nos aporta más que una valoración puntual del modelo, por lo que hemos considerado oportuno realizar 100 versiones del modelo realizando distintas particiones de los datos, a fin de poder obtener un error medio más representativo y que resulte en una buena estimación del $E_{out}$. El error medio obtenido es peor, pero sin embargo resulta mucho más válido al tratarse de un error contrastado en un número considerable de casos, y no en un caso puntual como era el primero que obtuvimos.
 
 Como conclusión final, un modelo que utilice suficiente número de atributos para predecir (sin llegar al límite de sobreajuste) y que contenga algún tipo de transformación no lineal es comprensible que refleje buenos resultados en un problema real con datos dispersos y con ruido. Dentro de los distintos modelos que cumplan esas características, de forma experimental hemos podido comparar varios y nos hemos quedado con el anteriormente mencionado.
 
 ##Regresión: "LA Ozone"
-En este caso, el problema de regresión a abortar se basa en los registros de concentración de ozono en la atmósfera de Los Angeles.
-
-A partir de dichos datos, buscamos predecir la cota máxima por hora de la concentración de ozono de la ciudad de Upland, California.
+En este caso, el problema a abordar se basa en los registros de concentración de ozono en la atmósfera de Los Angeles. Se trata de un problema de regresión donde buscamos predecir la cota máxima por hora de la concentración de ozono de la ciudad de Upland, California.
 
 Los atributos pertenecientes al conjunto de datos son los siguientes:
 * \textbf{vh}: Indica la presión atmosférica medida en la base aérea de los Angeles.
