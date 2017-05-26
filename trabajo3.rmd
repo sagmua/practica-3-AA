@@ -54,7 +54,8 @@ class(datos_sudafrica$famhist)
 Por tanto procedemos a interpretarlo de forma numérica, de forma que sustituimos 'presente' por 1 y 'ausente' por 0:
 ```{r}
 #Cambiamos la columna 'famhist' que contiene caracteres por su equivalente en valores numéricos:
-datos_sudafrica = data.frame(famhist = (ifelse(datos_sudafrica$famhist=="Absent",0,1)),datos_sudafrica[,-which(names(datos_sudafrica) == "famhist")])
+datos_sudafrica = data.frame(famhist = (ifelse(datos_sudafrica$famhist=="Absent",0,1)),
+                        datos_sudafrica[,-which(names(datos_sudafrica) == "famhist")])
 ```
 
 ###Conjuntos de training y test usados
@@ -70,7 +71,7 @@ sudafrica_test = datos_sudafrica[-train,]
 
 
 ###Preprocesamiento de los datos
-Antes de entrar en el preprocesamiento, consideramos interesante realizar una vista preliminar de las gráficas de cada atributo de la base de datos siendo reflejado con todos los demás. Así obtenemos una matriz simétrica de gráficas, con los colores indicando la etiqueta según padezca enfermedad (rojo) o no (verde):
+Antes de entrar en el preprocesamiento, consideramos interesante realizar una vista preliminar de las gráficas de dispersión de cada atributo de la base de datos siendo reflejado con todos los demás. Así obtenemos una matriz simétrica de gráficas, con los colores indicando la etiqueta según padezca enfermedad (rojo) o no (verde):
 
 ```{r}
 color = c(rep('green',sum(datos_sudafrica$chd ==0)),rep('red',sum(datos_sudafrica$chd==1)))
@@ -89,7 +90,8 @@ PCA calcula la varianza de cada atributo respecto a los demás, de forma que aqu
 Además, para no arriesgar mucho (puesto que PCA trabaja "a ciegas") representaremos sólo aquellos componentes que expliquen hasta el 90% de la variabilidad de los datos (es necesario que los datos estén escalados y centrados para aplicar PCA):
 
 ```{r}
-sudafricaTrans = preProcess(datos_sudafrica, method = c("BoxCox", "center", "scale", "pca"),thresh = 0.9)
+sudafricaTrans = preProcess(datos_sudafrica, method = c("BoxCox", "center", "scale", "pca"),
+                            thresh = 0.9)
 sudafricaTrans$rotation
 ```
 Como podemos observar en la tabla, se han reducido los atributos a 8 atributos (combinaciones lineales de los 10 anteriores).
@@ -108,8 +110,12 @@ Para conlcuir el preprocesamiento de los datos, realizaremos las siguientes oper
 Para aplicar las transformaciones, emplearemos la función preProcess sobre nuestro conjunto train, de forma que realizando un predict sobre el objeto transformación obtenido, obtengamos el conjunto de datos train preprocesado. A continuación, realizaremos las mismas transformaciones sobre el conjunto de test, utilizando el mismo objeto transformación:
 
 ```{r}
-sudafricaTrans = preProcess(sudafrica_train[,-which(names(sudafrica_train) == "chd")], method = c("BoxCox", "center", "scale"),thresh = 0.9)
-sudafrica_train[,-which(names(sudafrica_train) == "chd")] =predict(sudafricaTrans,sudafrica_train[,-which(names(sudafrica_train) == "chd")])
+sudafricaTrans = preProcess(sudafrica_train[,-which(names(sudafrica_train) == "chd")],
+                            method = c("BoxCox", "center", "scale"),thresh = 0.9)
+
+sudafrica_train[,-which(names(sudafrica_train) == "chd")]=predict(sudafricaTrans,
+         sudafrica_train[,-which(names(sudafrica_train) == "chd")])
+
 sudafrica_test[,-which(names(sudafrica_test) == "chd")] =predict(sudafricaTrans,sudafrica_test[,-which(names(sudafrica_test) == "chd")])
 ```
 
@@ -120,12 +126,13 @@ Antes de realizar un modelo, veamos cuáles son las características más repres
 Para ello emplearemos la función regsubsets. Esta función realiza una búsqueda exhaustiva (empleando Branch&Bound) de las mejores agrupaciones de atributos en nuestro conjunto de entrenamiento para predecir en una regresión lineal:
 
 ```{r}
-regsub_sudafrica =regsubsets(datos_sudafrica[,-which(names(datos_sudafrica) == "chd")], datos_sudafrica[,which(names(datos_sudafrica) == "chd")])
+regsub_sudafrica =regsubsets(datos_sudafrica[,-which(names(datos_sudafrica) == "chd")],
+                             datos_sudafrica[,which(names(datos_sudafrica) == "chd")])
 
 summary(regsub_sudafrica)
 ```
 
-En la gráfica aportada por la función, interpretamos como atributos más representativos aquellos cuyas columnas tienen más estrellas. Nuestro criterio a seguir a la hora de generar modelos lineales será, no obstante, tratar de predecir utilizando las agrupaciones de atributos que la función considera representativos, Es decir, si queremos realizar un modelo con n características, utilizaremos aquellas que estén marcadas con una estrella para la fila n. Para mostrar un ejemplo que explique la gráfica, si queremos utilizar 3 atributos para el modelo, escogeremos 'age', 'famhist' y 'tobacco'.
+En la gráfica aportada por la función, obtenemos los atributos más representativos en caso de realizar un modelo con 'n' parámetros (filas), de forma que según el número de atributos que deseamos para nuestro modelo nos estíma cuales serían los parámetros más representativos a emplear. Nuestro criterio a seguir a la hora de generar modelos lineales será, no obstante, tratar de predecir utilizando las agrupaciones de atributos que la función considera representativos, Es decir, si queremos realizar un modelo con n características, utilizaremos aquellas que estén marcadas con una estrella para la fila n. Para mostrar un ejemplo que explique la gráfica, si queremos utilizar 3 atributos para el modelo, escogeremos 'age', 'famhist' y 'tobacco'.
 
 Ahora que sabemos cómo elegir las características más recomendables para realizar modelos, podremos construir una serie de ellos con algunas de estas características y validar con el conjunto de test para comprobar los errores que reflejan.
 
@@ -171,7 +178,7 @@ Para empezar, calculamos un sencillo modelo lineal con el que intentamos predeci
 m_muestra_sudafrica = lm(chd ~ age, data=sudafrica_train)
 ```
 
-Para el cálculo del error, y a fin de intentar aportar un punto de generalización al problema a abordar, definimos una función que calcula el error (etiquetas mal clasificadas en función de etiquetas totales) y muestra la matriz de confusión en el conjunto de test a partir de un modelo:
+Para el cálculo del error, y a fin de intentar aportar un punto de generalización al problema a abordar, definimos una función que calcula el error (porcentaje de etiquetas mal clasificadas en función de etiquetas totales) y muestra la matriz de confusión en el conjunto de test a partir de un modelo:
 
 ```{r errorEtiquetas}
 calculoErrorMatrizConfusion  = function (modelo, test, etiquetas, imprimir_matriz=TRUE){
@@ -312,7 +319,7 @@ Como podemos ver, obtenemos una estimación del $E_{out}$ de 0.286. Este error r
 
 Tras los diferentes modelos generados, sin aplicar regularización al considerar que la desviación no varía de forma significativa entre hacerla y no hacerla, habiendo utilizado distintas combinaciones de atributos, tratando de optimizar con transformaciones no lineales, y habiendo decidido no utilizar regularización, hemos conlcuido que el mejor modelo que hemos podido encontrar ha sido aquel que utiliza la agrupación de los 5 mejores atributos según regsubsets, y con una transformación cuadrática del atributo 'age'.
 
-Con este modelo hemos reducido la tasa de error hasta un 23.9% con los conjuntos generados inicialmente. Si consideramos la distribución de los datos que observamos en la matriz de gráficas al comienzo del problema, y según hemos comprobado de forma experimental, la base de datos no es lineal, y con un modelo lineal no podremos ajustar de mucha mejor forma los datos. A pesar de ello, decidimos empezar por ahí para encontrar qué características son más representativas a la hora de reducir el error. Hemos construido diferentes modelos combinando los atributos que mayor varianza presentan (más representativos) y hemos ido reduciendo el error hasta que se ha empezado a producir sobreajuste. A partir de aquí, añadir más atributos sólo nos continúa ajustando de más la función, provocando que se produzcan muchas curvas en la función que dificulten generalizar los datos del conjunto de test.
+Con este modelo hemos reducido la tasa de error hasta un 23.9% con los conjuntos generados inicialmente. Si consideramos la distribución de los datos que observamos en la matriz de gráficas al comienzo del problema, y según hemos comprobado de forma experimental, la base de datos no es lineal, y con un modelo lineal no podremos ajustar de mucha mejor forma los datos. A pesar de ello, decidimos empezar por ahí para encontrar qué características son más representativas a la hora de reducir el error. Hemos construido diferentes modelos combinando los atributos que mayor varianza presentan (más representativos) y hemos ido reduciendo el error hasta que se ha empezado a producir sobreajuste. A partir de aquí, añadir más atributos sólo nos continúa sobreajustando la función, provocando que se produzcan muchas curvas en la función que dificulten generalizar los datos del conjunto de test.
 
 Llegados a este punto, como no nos conviene añadir más atributos y puesto que nos encontramos frente a un modelo no lineal, consideramos realizar algunas transformaciones no lineales sobre los atributos que ya tenemos, y encontramos el mejor error realizando una transformación cuadrática sobre el atributo 'age'. Optamos por esto dado que contamos con unos datos muy dispersos y difícilmente separables con una función lineal. Probando con nuevas transformaciones no logramos mejor resultado así que nos quedamos con este modelo.
 
@@ -410,7 +417,7 @@ regsub_ozone =regsubsets(datos_ozone[,-which(names(datos_ozone) == "ozone")], da
 summary(regsub_ozone)
 ```
 
-En la gráfica aportada por la función, interpretamos como atributos más representativos aquellos cuyas columnas tienen más estrellas. Nuestro criterio a seguir a la hora de generar modelos lineales será, no obstante, tratar de predecir utilizando las agrupaciones de atributos que la función considera representativos, Es decir, si queremos realizar un modelo con n características, utilizaremos aquellas que estén marcadas con una estrella para la fila n. Para mostrar un ejemplo que explique la gráfica, si queremos utilizar 3 atributos para el modelo, escogeremos 'humidity', 'temp' e 'ibh'.
+En la gráfica aportada por la función, obtenemos los atributos más representativos en caso de realizar un modelo con 'n' parámetros (filas), de forma que según el número de atributos que deseemos para nuestro modelo nos estíma cuales serían los parámetros más representativos a emplear. Nuestro criterio a seguir a la hora de generar modelos lineales será, no obstante, tratar de predecir utilizando las agrupaciones de atributos que la función considera representativos, es decir, si queremos realizar un modelo con n características, utilizaremos aquellas que estén marcadas con una estrella para la fila n. Para mostrar un ejemplo que explique la gráfica, si queremos utilizar 3 atributos para el modelo, escogeremos 'humidity', 'temp' e 'ibh'.
 
 Ahora que sabemos cuáles son las características más recomendables para realizar modelos, podremos construir una serie de ellos con algunas de estas características y validar con el conjunto de test para comprobar los errores que reflejan.
 
@@ -454,7 +461,7 @@ Para la realización de los modelos planteamos emplear regresión logística med
 
 Entonces procederemos a generar modelos mediante regresión lineal, así obtendremos un valor dependiendo de la distancia de los atributos a la recta generada.
 
-Antes definimos una función para el cálculo del error cuadrático. Para ello realizamos un cálculo de la media de errores normalizados en un intervalo. Se realiza el cociente entre la resta de las variables respuesta reales menos las predichas, y la diferencia entre el valor máximo y mínimo de las variables respuesta:
+Antes definimos una función para el cálculo del error. Para ello realizamos un cálculo de la media de errores normalizados en un intervalo. Se realiza el cociente entre la resta de las variables respuesta reales menos las predichas, y la diferencia entre el valor máximo y mínimo de las variables respuesta:
 
 ```{r calculoErrorMedioIntervalo}
 
@@ -553,7 +560,8 @@ Definamos una función que realice tanto la generación y el particionado, así 
 
 ```{r generaErrorParticionOzone}
 generarErrorParticionOzone = function(datos){
-  #Si queremos obtener un conjunto de indices train para luego ejecutar un modelo lineal sobre el train:
+  #Si queremos obtener un conjunto de indices train para luego
+  #ejecutar un modelo lineal sobre el train:
   train = sample (nrow(datos), round(nrow(datos)*0.7))
   #definimos ambos conjuntos en dos data.frame diferentes:
   ozone_train = datos_ozone[train,]
