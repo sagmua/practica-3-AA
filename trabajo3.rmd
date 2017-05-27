@@ -590,9 +590,6 @@ mean(replicate(100, generarErrorParticionOzone(datos_ozone)))
 Como podemos ver, obtenemos un $E_{out}$ medio del 0.084, aún mejor que en el caso particular al que sometimos el modelo al principio. Este error representa de forma mucho más fiable el error real obtenido por nuestro modelo, y le da más validez y consistencia.
 
 ###Conclusión y modelo final seleccionado
-###########################################################################################
-#################REALIZAR LA CONCLUSION EN FUNCIÓN DE LOS DATOS OBTENIDOS##################
-###########################################################################################
 
 Una vez que hemos generado distintos modelos de regresión lineal, sin haber aplicado regularización al comprobar que la desviación no varía de forma significativa entre hacerla y no hacerla, y habiendo utilizado distintas agrupaciones de atributos tratando de optimizar con transformaciones no lineales, hemos concluido que el mejor modelo que hemos podido encontrar ha sido aquel que utiliza la agrupación del producto de 4 atributos de los recomendados de regsubsets. No obstante, variamos ligeramente la agrupación sustituyendo un atributo, ya que de forma experimental comprobamos que daba mejor resultado.  
 
